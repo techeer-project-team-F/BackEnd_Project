@@ -1,0 +1,102 @@
+package com.shelfeed.backend.domain.member.entity;
+
+import com.shelfeed.backend.domain.member.enums.LibraryVisibility;
+import com.shelfeed.backend.domain.member.enums.MemberRole;
+import com.shelfeed.backend.domain.member.enums.MemberStatus;
+import com.shelfeed.backend.global.common.entity.BaseTimeEntity;
+import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "members")
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class Member extends BaseTimeEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "member_id")
+    private Long id;
+
+    @Column(name = "member_user_id", nullable = false, unique = true)
+    private Long memberUserId;
+
+    @Column(nullable = false, unique = true)
+    private String email;
+
+    private String password; // 구글 로그인 Null로
+
+    @Column(nullable = false, length = 50)
+    private String nickname;
+
+    @Column(length = 500)
+    private String profileImageUrl;
+
+    @Column(nullable = false)
+    private boolean emailVerified;
+
+    @Column(nullable = false)
+    private boolean onboardingCompleted;
+
+    @Column(length = 300)
+    private String bio;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private LibraryVisibility libraryVisibility = LibraryVisibility.PUBLIC;
+
+    @Column(nullable = false, columnDefinition = "JSON")
+    private String notificationPreferences = "{}";
+
+    @Column(nullable = false)
+    private int followerCount = 0;
+
+    @Column(nullable = false)
+    private int followingCount = 0;
+
+    @Column(nullable = false)
+    private int reviewCount = 0;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private MemberRole role = MemberRole.USER;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private MemberStatus status = MemberStatus.ACTIVE;
+
+    private LocalDateTime lastLoginAt;
+    private LocalDateTime withdrawnAt;
+
+    // 계정 생성하고 수정 안되는 것들
+    public static Member createLocal(String email, String encodedPassword, String nickname) {
+        Member member = new Member();
+        member.email = email;
+        member.password = encodedPassword;
+        member.nickname = nickname;
+        member.emailVerified = false;
+        member.onboardingCompleted = false;
+        return member;
+    }
+
+    // 비즈니스 메서드
+    public void updateProfile(String nickname, String bio, String profileImageUrl) {
+        this.nickname = nickname;
+        this.bio = bio;
+        this.profileImageUrl = profileImageUrl;
+    }
+    public void completeOnboarding() { this.onboardingCompleted = true; }
+    public void recordLogin() { this.lastLoginAt = LocalDateTime.now(); }
+    public void changePassword(String encodedPassword) {this.password = encodedPassword;}
+    public void increaseReviewCount() { this.reviewCount++; }
+    public void decreaseReviewCount() { if (this.reviewCount > 0) this.reviewCount--; }
+    public void withdraw() {
+        this.status = MemberStatus.WITHDRAWN;
+        this.withdrawnAt = LocalDateTime.now();
+    }
+}
+
