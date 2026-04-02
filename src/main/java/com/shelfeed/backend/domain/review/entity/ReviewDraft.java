@@ -53,6 +53,13 @@ public class ReviewDraft {
         return draft;
     }
 
-
+    //비즈니스 메서드
+    public void update(Byte rating, String content, Integer readPages, Boolean isSpoiler,ReviewVisibility reviewVisibility){
+        this.rating = rating;
+        this.content = content;
+        this.readPages = readPages;
+        this.isSpoiler = isSpoiler;
+        this.reviewVisibility = reviewVisibility;
+    }
 
 }
