@@ -39,4 +39,27 @@ public class Comment extends BaseTimeEntity{
     private boolean isDeleted = false;
 
     private LocalDateTime deletedAt;
+
+    // 1. 정적 메서드 첫댓글 작성할 때
+    public static Comment createOriginComment(Review review, Member member, String content) {
+        Comment comment = new Comment();
+        comment.review = review;
+        comment.member = member;
+        comment.content = content;
+        return comment;
+    }
+
+    // 2. 정적 메서드 대댓글을 작성할 때
+    public static Comment createReply(Review review, Member member, Comment parentComment, String content) {
+        if (parentComment == null) {
+            throw new IllegalArgumentException("대댓글은 반드시 부모 댓글이 필요합니다!");
+        }
+        Comment comment = new Comment();
+        comment.review = review;
+        comment.member = member;
+        comment.parentComment = parentComment;
+        comment.content = content;
+        return comment;
+    }
+
 }

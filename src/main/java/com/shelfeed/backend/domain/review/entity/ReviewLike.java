@@ -34,4 +34,12 @@ public class ReviewLike {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    //정적 메서드
+    public static ReviewLike reviewLike(Member member, Review review) {
+        ReviewLike reviewLike = new ReviewLike();
+        reviewLike.member = member;
+        reviewLike.review = review;
+        return reviewLike;
+    }
+
 }

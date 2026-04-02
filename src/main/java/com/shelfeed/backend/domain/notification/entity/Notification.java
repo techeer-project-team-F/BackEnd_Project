@@ -33,7 +33,7 @@ public class Notification {
     @JoinColumn(name = "actor_member_id")
     private Member actor;
 
-    // 알림 종류에 따라 하나만 값이 채워짐 — JPA 관계 대신 ID만 저장 (유연성)
+    // 약한 결합을 통해 유연성 확보
     @Column(name = "review_id")
     private Long reviewId;
 
@@ -65,4 +65,25 @@ public class Notification {
     @CreatedDate
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    // 1. 정적메서스 유저 간의 알림
+    public static Notification createUserNotification(Member receiver, Member actor, NotificationType type, Long targetId) {
+        if (actor == null) {
+            throw new IllegalArgumentException("유저 알림은 반드시 유저가 필요합니다.");
+        }
+        Notification noti = new Notification();
+        noti.receiver = receiver;
+        noti.actor = actor;  // 행위자 세팅
+        noti.type = type;
+        return noti;
+    }
+
+    // 2. 정적메서스 시스템(푸시) 알림
+    public static Notification createSystemNotification(Member receiver, NotificationType type, String message) {
+        Notification noti = new Notification();
+        noti.receiver = receiver;
+        noti.type = type;
+        noti.message = message;
+        return noti;
+    }
 }

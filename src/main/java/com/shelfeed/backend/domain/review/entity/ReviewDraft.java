@@ -32,7 +32,7 @@ public class ReviewDraft {
     @JoinColumn(name = "library_book_id")
     private LibraryBook libraryBook;
 
-    private byte rating;
+    private Byte rating;
 
     @Column(columnDefinition = "TEXT")
     private String content;
@@ -45,8 +45,13 @@ public class ReviewDraft {
     @Column(length = 10)
     private ReviewVisibility reviewVisibility;
 
-
-
+    //정적 메서드
+    public static ReviewDraft create(Member member, Book book){
+        ReviewDraft draft = new ReviewDraft();
+        draft.member = member;
+        draft.book = book;
+        return draft;
+    }
 
 
 

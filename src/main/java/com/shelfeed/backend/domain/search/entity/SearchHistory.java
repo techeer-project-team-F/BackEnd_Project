@@ -32,4 +32,12 @@ public class SearchHistory {
     @CreatedDate
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    // 정적 메서드
+    public static SearchHistory create(Member member, String keyword) {
+        SearchHistory searchHistory = new SearchHistory();
+        searchHistory.member = member;
+        searchHistory.keyword = keyword;
+        return searchHistory;
+    }
 }

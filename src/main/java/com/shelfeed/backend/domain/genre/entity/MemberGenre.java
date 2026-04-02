@@ -23,4 +23,12 @@ public class MemberGenre {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "genre_id", nullable = false)
     private Genre genre;
+
+    //정적 메서드
+    public static MemberGenre create (Member member, Genre genre){
+        MemberGenre memberGenre = new MemberGenre();
+        memberGenre.member = member;
+        memberGenre.genre = genre;
+        return memberGenre;
+    }
 }

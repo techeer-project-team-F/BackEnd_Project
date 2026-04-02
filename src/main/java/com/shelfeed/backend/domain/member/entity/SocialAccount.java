@@ -36,4 +36,14 @@ public class SocialAccount {
     @CreatedDate
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    // 정적 메서드
+    public static SocialAccount create(Member member, String provider, String providerId) {
+        SocialAccount socialAccount = new SocialAccount();
+        socialAccount.member = member;
+        socialAccount.provider = provider;
+        socialAccount.providerId = providerId;
+        return socialAccount;
+    }
+
 }

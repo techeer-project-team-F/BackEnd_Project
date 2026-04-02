@@ -33,7 +33,7 @@ public class Review extends BaseTimeEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "library_book_id")
-    private LibraryBook LibraryBook;
+    private LibraryBook libraryBook;
 
     @Column(nullable = false)
     private byte rating;
@@ -62,7 +62,21 @@ public class Review extends BaseTimeEntity {
     private LocalDateTime deletedAt;
 
 
-
+    //정적 메서드
+    //리뷰 적을 때 컬럼 값을 제공해줘야하는 기본 메서드 불완전한 객체 방지
+    public static Review create(Member member, Book book, LibraryBook libraryBook,
+                                byte rating, String content, boolean isSpoiler,
+                                ReviewVisibility reviewVisibility) {
+        Review review = new Review();
+        review.member = member;
+        review.book = book;
+        review.libraryBook = libraryBook;
+        review.rating = rating;
+        review.content = content;
+        review.isSpoiler = isSpoiler;
+        review.reviewVisibility = reviewVisibility;
+        return review;
+    }
 
 
 }
