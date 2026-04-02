@@ -36,4 +36,12 @@ public class Feed {
     @CreatedDate
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    // 정적 메서드
+    public static Feed create(Member member, Review review) {
+        Feed feed = new Feed();
+        feed.member = member;
+        feed.review = review;
+        return feed;
+    }
 }

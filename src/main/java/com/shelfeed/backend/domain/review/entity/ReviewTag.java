@@ -25,4 +25,12 @@ public class ReviewTag {
     @JoinColumn(name = "tag_id", nullable = false)
     private Tag tag;
 
+    // 정적 메서드
+    public static ReviewTag create(Review review, Tag tag) {
+        ReviewTag reviewTag = new ReviewTag();
+        reviewTag.review = review;
+        reviewTag.tag = tag;
+        return reviewTag;
+    }
+
 }

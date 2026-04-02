@@ -52,4 +52,27 @@ public class Report {
     private LocalDateTime createdAt;
 
     private LocalDateTime resolvedAt;
+
+    // 정적 메서드 감상 신고
+    public static Report createReviewReport(Member member, Long reviewId,
+                                            ReportReason reason, String detail) {
+        Report report = new Report();
+        report.member = member;
+        report.reviewId = reviewId;
+        report.reason = reason;
+        report.detail = detail;
+        return report;
+    }
+
+    // 정적 메서드 댓글 신고
+    public static Report createCommentReport(Member member, Long commentId,
+                                             ReportReason reason, String detail) {
+        Report report = new Report();
+        report.member = member;
+        report.commentId = commentId;
+        report.reason = reason;
+        report.detail = detail;
+        return report;
+    }
+
 }

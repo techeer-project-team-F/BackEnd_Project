@@ -32,4 +32,12 @@ public class CommentLike {
     @CreatedDate
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    // 정적 메서드
+    public static CommentLike create(Member member, Comment comment) {
+        CommentLike commentLike = new CommentLike();
+        commentLike.member = member;
+        commentLike.comment = comment;
+        return commentLike;
+    }
 }

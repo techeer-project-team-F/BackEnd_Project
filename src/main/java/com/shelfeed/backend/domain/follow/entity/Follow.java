@@ -36,4 +36,12 @@ public class Follow {
     @CreatedDate
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    //정적 메서드
+    public static Follow create (Member follower, Member followee){
+        Follow follow = new Follow();
+        follow.follower = follower;
+        follow.followee =  followee;
+        return follow;
+    }
 }
