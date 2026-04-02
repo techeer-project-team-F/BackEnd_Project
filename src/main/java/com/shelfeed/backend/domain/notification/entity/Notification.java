@@ -86,4 +86,10 @@ public class Notification {
         noti.message = message;
         return noti;
     }
+
+    //비즈니스 메서드
+    //읽음 처리
+    public void beReaded(){this.isRead = true;}
+    //소프트 삭제
+    public void delete (){this.isDeleted = true;}
 }

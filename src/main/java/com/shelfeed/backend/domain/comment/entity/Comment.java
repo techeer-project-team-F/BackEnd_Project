@@ -62,4 +62,10 @@ public class Comment extends BaseTimeEntity{
         return comment;
     }
 
+    //비즈니스 메서드
+    public void softDelete(){
+        this.isDeleted = true;
+        this.deletedAt = LocalDateTime.now();
+    }
+
 }

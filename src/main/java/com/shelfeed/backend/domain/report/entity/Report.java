@@ -75,4 +75,15 @@ public class Report {
         return report;
     }
 
+    //비즈니스 메서드
+    // 신고 처리
+    public void resolve(){
+        this.status = ReportStatus.RESOLVED;
+        this.resolvedAt = LocalDateTime.now();
+    }
+    // 신고 반려
+    public void reject(){
+        this.status = ReportStatus.REJECTED;
+        this.resolvedAt = LocalDateTime.now();
+    }
 }

@@ -77,6 +77,23 @@ public class Review extends BaseTimeEntity {
         review.reviewVisibility = reviewVisibility;
         return review;
     }
+    // 비즈니스 메서드
+    // 좋아요 수 증감
+    public void increaseLikeCount() {this.likeCount++;}
+    public void decreaseLikeCount() {if (this.likeCount > 0) this.commentCount--;}
+
+    //댓글 수 증감
+    public void increaseCommentCount(){this.commentCount++;}
+    public void decreaseCommentCount(){if (this.commentCount >0) this.commentCount--;}
+
+    // 공개 범위 변경
+    public void changeVisibility(ReviewVisibility visibility){this.reviewVisibility = visibility;}
+
+    //소프트 삭제
+    public void softDelect(){
+        this.isDeleted = true;
+        this.deletedAt = LocalDateTime.now();
+    }
 
 
 }
