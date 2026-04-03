@@ -8,9 +8,7 @@ import lombok.Getter;
 @Builder
 public class GoogleLoginResponse {
     private String accessToken;
-    private String refreshToken;
     private Long accessTokenExpiresIn;
-    private Long refreshTokenExpiresIn;
     private boolean isNewUser;
     private UserInfo user;
 
@@ -21,21 +19,21 @@ public class GoogleLoginResponse {
         private String email;
         private String nickname;
         private String profileImageUrl;
+        private boolean emailVerified;
         private boolean onboardingCompleted;
     }
 
     public static GoogleLoginResponse of(Member member, String accessToken, String refreshToken, Long accessTokenExpiresIn, Long refreshTokenExpiresIn, boolean isNewUser){
         return GoogleLoginResponse.builder()
                 .accessToken(accessToken)
-                .refreshToken(refreshToken)
                 .accessTokenExpiresIn(accessTokenExpiresIn)
-                .refreshTokenExpiresIn(refreshTokenExpiresIn)
                 .isNewUser(isNewUser)
                 .user(UserInfo.builder()
                         .userId(member.getMemberUserId())
                         .email(member.getEmail())
                         .nickname(member.getNickname())
                         .profileImageUrl(member.getProfileImageUrl())
+                        .emailVerified(member.isEmailVerified())
                         .onboardingCompleted(member.isOnboardingCompleted())
                         .build())
                 .build();

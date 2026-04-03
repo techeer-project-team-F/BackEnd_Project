@@ -73,12 +73,26 @@ public class Member extends BaseTimeEntity {
     private LocalDateTime withdrawnAt;
 
     // 계정 생성하고 수정 안되는 것들
-    public static Member createLocal(String email, String encodedPassword, String nickname) {
+    public static Member createLocal(Long memberUserId, String email, String encodedPassword, String nickname) {
         Member member = new Member();
+        member.memberUserId = memberUserId;
         member.email = email;
         member.password = encodedPassword;
         member.nickname = nickname;
         member.emailVerified = false;
+        member.onboardingCompleted = false;
+        return member;
+    }
+
+    // Google OAuth 신규 회원 생성
+    public static Member createOAuth(Long memberUserId, String email,
+                                     String nickname, String profileImageUrl) {
+        Member member = new Member();
+        member.memberUserId = memberUserId;
+        member.email = email;
+        member.nickname = nickname;
+        member.profileImageUrl = profileImageUrl;
+        member.emailVerified = true;   // 소셜 로그인은 이메일 인증 생략
         member.onboardingCompleted = false;
         return member;
     }
@@ -98,5 +112,6 @@ public class Member extends BaseTimeEntity {
         this.status = MemberStatus.WITHDRAWN;
         this.withdrawnAt = LocalDateTime.now();
     }
+    public void verifyEmail(){this.emailVerified = true;}
 }
 
