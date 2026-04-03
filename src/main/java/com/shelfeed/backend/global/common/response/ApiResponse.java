@@ -1,24 +1,73 @@
 package com.shelfeed.backend.global.common.response;
 
-import lombok.AllArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.Builder;
 import lombok.Getter;
 
+import java.util.List;
+
 @Getter
-@AllArgsConstructor //클래스에 지정한 필드 개수 만큼 생성자를 자동 생성
+@Builder
+@JsonInclude(JsonInclude.Include.NON_NULL) // null 필드는 JSON에서 제외
 public class ApiResponse<T> {
-    private final boolean success;
+
+    private final String status;
+    private final int code;
     private final String message;
-    private final T data; //T는 아무 값이나 들어 올 수 있음
+    private final T data;
+    private final List<FieldError> errors;
 
-    public static <T> ApiResponse<T> ok(T data){//static : 모든 객체가 공유, 객체 자동생성(객체를 생성하는 메서드 일 때 사용)
-        return new ApiResponse<>(true, "OK", data);
-    }// return 값은 ApiResponse<T>
-
-    public static <T> ApiResponse<T> ok(String message, T data){
-        return new ApiResponse<>(true, message, data);
+    // 성공 (쓰기) - message + data 포함
+    public static <T> ApiResponse<T> success(int code, String message, T data) {
+        return ApiResponse.<T>builder()
+                .status("SUCCESS")
+                .code(code)
+                .message(message)
+                .data(data)
+                .build();
     }
 
-    public static ApiResponse<Void> fail(String message){//Void : 제네릭 안에 값이 안들어갈 때 문법상 사용해야 함
-        return new ApiResponse<>(false, message, null);
+    // 성공 (조회) - data만 포함
+    public static <T> ApiResponse<T> success(int code, T data) {
+        return ApiResponse.<T>builder()
+                .status("SUCCESS")
+                .code(code)
+                .data(data)
+                .build();
+    }
+
+    // 성공 (data 없음) - message만 포함
+    public static ApiResponse<Void> success(int code, String message) {
+        return ApiResponse.<Void>builder()
+                .status("SUCCESS")
+                .code(code)
+                .message(message)
+                .build();
+    }
+
+    // 에러 (필드 검증 실패) - errors 포함
+    public static ApiResponse<Void> error(int code, String message, List<FieldError> errors) {
+        return ApiResponse.<Void>builder()
+                .status("ERROR")
+                .code(code)
+                .message(message)
+                .errors(errors)
+                .build();
+    }
+
+    // 에러 (일반) - message만 포함
+    public static ApiResponse<Void> error(int code, String message) {
+        return ApiResponse.<Void>builder()
+                .status("ERROR")
+                .code(code)
+                .message(message)
+                .build();
+    }
+
+    @Getter
+    @Builder
+    public static class FieldError {
+        private final String field;
+        private final String message;
     }
 }
