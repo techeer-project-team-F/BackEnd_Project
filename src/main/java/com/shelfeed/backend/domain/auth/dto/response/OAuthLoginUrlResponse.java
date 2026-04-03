@@ -6,10 +6,10 @@ import lombok.Getter;
 @Getter
 @Builder
 public class OAuthLoginUrlResponse {
-    private String loinUrl;
+    private String loginUrl;
     public static  OAuthLoginUrlResponse of(String loinUrl){
         return OAuthLoginUrlResponse.builder()
-                .loinUrl(loinUrl)
+                .loginUrl(loinUrl)
                 .build();
     }
 
