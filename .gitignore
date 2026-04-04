@@ -26,6 +26,8 @@ src/main/generated/
 ### Env ###
 .env
 *.env
+src/main/resources/application-local.yml
+src/main/resources/application-prod.yml
 
 ### OMC (Claude Code plugin) ###
 .omc/
