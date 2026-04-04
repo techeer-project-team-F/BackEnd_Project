@@ -7,12 +7,12 @@ import lombok.Getter;
 @Builder
 public class TokenRefreshResponse {
     private String accessToken;
-    private String refreshToken;
+    private Long accessTokenExpiresIn;
 
-    public static TokenRefreshResponse of(String accessToken, String refreshToken, long accessTokenExpiresIn, long refreshTokenExpiresIn){
+    public static TokenRefreshResponse of(String accessToken, long accessTokenExpiresIn){
         return TokenRefreshResponse.builder()
                 .accessToken(accessToken)
-                .refreshToken(refreshToken)
+                .accessTokenExpiresIn(accessTokenExpiresIn)
                 .build();
     }
 }

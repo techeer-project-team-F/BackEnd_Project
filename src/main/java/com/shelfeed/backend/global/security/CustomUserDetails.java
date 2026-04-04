@@ -32,7 +32,7 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {//UserDetails인터페이스에 있는 메서드
-        return List.of(new SimpleGrantedAuthority("ROLE" + member.getRole().name()));
+        return List.of(new SimpleGrantedAuthority("ROLE_" + member.getRole().name()));
     }
 
     @Override

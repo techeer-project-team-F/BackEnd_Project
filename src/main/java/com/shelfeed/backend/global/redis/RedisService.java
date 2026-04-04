@@ -35,7 +35,7 @@ public class RedisService {
     // Access Token 블랙리스트: 로그아웃 후 만료 전 토큰 재사용 방지
     public void addToBlacklist(String accessToken, long remainingMs){
         redisTemplate.opsForValue().set( // remainingMs 시간 만큼 못쓰게 하면서 시간 지나면 삭제 하도록
-                BLACKLIST_PREFIX + accessToken,"1", remainingMs, TimeUnit.SECONDS);
+                BLACKLIST_PREFIX + accessToken,"1", remainingMs, TimeUnit.MILLISECONDS);
     }
     public boolean isBlacklisted(String accessToken){
         return redisTemplate.hasKey(BLACKLIST_PREFIX + accessToken);
