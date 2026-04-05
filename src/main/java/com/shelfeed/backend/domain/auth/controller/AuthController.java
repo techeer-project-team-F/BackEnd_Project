@@ -68,14 +68,14 @@ public class AuthController {
     }
 
     // 6. Google OAuth 로그인 완료  POST /api/v1/auth/oauth2/google/login
-    /*@PostMapping("/oauth2/google/login")
+    @PostMapping("/oauth2/google/login")
     public ApiResponse<GoogleLoginResponse> googleLogin(
             @Valid @RequestBody OAuthTokenRequest request,
             HttpServletResponse response) {
         AuthService.GoogleLoginTokenPair result = authService.googleLogin(request);
         setRefreshTokenCookie(response, result.refreshToken());
         return ApiResponse.success(200, "로그인 성공", result.response());
-    }*/
+    }
 
     // 7. 토큰 갱신  POST /api/v1/auth/token/refresh
     @PostMapping("/token/refresh")
