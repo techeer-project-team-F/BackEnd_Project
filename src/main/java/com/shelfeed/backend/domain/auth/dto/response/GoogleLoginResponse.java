@@ -23,7 +23,8 @@ public class GoogleLoginResponse {
         private boolean onboardingCompleted;
     }
 
-    public static GoogleLoginResponse of(Member member, String accessToken, String refreshToken, Long accessTokenExpiresIn, Long refreshTokenExpiresIn, boolean isNewUser){
+    public static GoogleLoginResponse of(Member member, String accessToken,
+                                         long accessTokenExpiresIn, boolean isNewUser) {
         return GoogleLoginResponse.builder()
                 .accessToken(accessToken)
                 .accessTokenExpiresIn(accessTokenExpiresIn)

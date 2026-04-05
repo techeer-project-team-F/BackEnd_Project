@@ -3,6 +3,7 @@ package com.shelfeed.backend.domain.auth.service;
 import com.shelfeed.backend.domain.auth.dto.request.*;
 import com.shelfeed.backend.domain.auth.dto.response.*;
 import com.shelfeed.backend.domain.member.entity.Member;
+import com.shelfeed.backend.domain.member.entity.SocialAccount;
 import com.shelfeed.backend.domain.member.enums.MemberStatus;
 import com.shelfeed.backend.domain.member.repository.MemberRepository;
 import com.shelfeed.backend.domain.member.repository.SocialAccountRepository;
@@ -33,8 +34,10 @@ public class AuthService {
 
     @Value("${oauth2.google.client-id}")
     private String googleClientId;
+    @Value("${oauth2.google.client-secret}")
+    private String googleClientSecret;
     @Value("${oauth2.google.redirect-uri}")
-    private  String googleRedirectUri;
+    private String googleRedirectUri;
 
     private static final int MAX_EMAIL_VERIFY_ATTEMPTS = 5;
 
@@ -52,6 +55,11 @@ public class AuthService {
         Member member = Member.createLocal(memberUserId, request.getEmail(), passwordEncoder.encode(request.getPassword()), request.getNickname());
 
         memberRepository.save(member); // 저장
+
+        // 이메일 인증 코드 생성 후 Redis에 저장 (5분 TTL)
+        String code = generateSixDigitCode();
+        redisService.saveEmailCode(request.getEmail(), code, 300);
+        // emailService.sendVerificationEmail(request.getEmail(), code); // TODO: 실제 메일 발송
 
         String accessToken = jwtProvider.generateAccessToken(member); //인증 토큰
         String refreshToken = jwtProvider.generateRefreshToken(member); // 재발급 토큰
@@ -139,7 +147,96 @@ public class AuthService {
         return OAuthLoginUrlResponse.of(logUrl);
     }
 
-    // ── 6. Google OAuth 로그인 완료(구현 예정)
+    // ── 6. Google OAuth 로그인 완료
+    public GoogleLoginTokenPair googleLogin(OAuthTokenRequest request) {
+        // 1) Google 토큰 엔드포인트에 code 교환 요청
+        GoogleTokenResponse tokenResponse = exchangeGoogleCode(request.getCode(), request.getRedirectUri());
+
+        // 2) Google 유저 정보 조회
+        GoogleUserInfo userInfo = getGoogleUserInfo(tokenResponse.accessToken());
+
+        // 3) 기존 소셜 계정 조회
+        return socialAccountRepository.findByProviderAndProviderId("GOOGLE", userInfo.sub())
+                .map(socialAccount -> {
+                    // 기존 회원 로그인
+                    Member member = socialAccount.getMember();
+                    member.recordLogin();
+                    String accessToken = jwtProvider.generateAccessToken(member);
+                    String refreshToken = jwtProvider.generateRefreshToken(member);
+                    redisService.saveRefreshToken(member.getMemberUserId(), refreshToken,
+                            jwtProvider.getRefreshTokenExpiresIn());
+                    return new GoogleLoginTokenPair(
+                            GoogleLoginResponse.of(member, accessToken,
+                                    jwtProvider.getAccessTokenExpiresIn(), false),
+                            refreshToken);
+                })
+                .orElseGet(() -> {
+                    // 신규 회원 생성
+                    Long memberUserId = redisService.generateMemberUserId();
+                    String nickname = "Google_" + memberUserId;
+                    Member member = Member.createOAuth(memberUserId, userInfo.email(),
+                            nickname, userInfo.picture());
+                    memberRepository.save(member);
+                    socialAccountRepository.save(
+                            SocialAccount.create(member, "GOOGLE", userInfo.sub()));
+                    String accessToken = jwtProvider.generateAccessToken(member);
+                    String refreshToken = jwtProvider.generateRefreshToken(member);
+                    redisService.saveRefreshToken(memberUserId, refreshToken,
+                            jwtProvider.getRefreshTokenExpiresIn());
+                    return new GoogleLoginTokenPair(
+                            GoogleLoginResponse.of(member, accessToken,
+                                    jwtProvider.getAccessTokenExpiresIn(), true),
+                            refreshToken);
+                });
+    }
+
+    // Google code → token 교환
+    private GoogleTokenResponse exchangeGoogleCode(String code, String redirectUri) {
+        org.springframework.web.client.RestClient restClient =
+                org.springframework.web.client.RestClient.create();
+        try {
+            return restClient.post()
+                    .uri("https://oauth2.googleapis.com/token")
+                    .contentType(org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED)
+                    .body("code=" + code
+                            + "&client_id=" + googleClientId
+                            + "&client_secret=" + googleClientSecret
+                            + "&redirect_uri=" + redirectUri
+                            + "&grant_type=authorization_code")
+                    .retrieve()
+                    .body(GoogleTokenResponse.class);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.OAUTH_PROVIDER_ERROR);
+        }
+    }
+
+    // Google accessToken → 유저 정보 조회
+    private GoogleUserInfo getGoogleUserInfo(String accessToken) {
+        org.springframework.web.client.RestClient restClient =
+                org.springframework.web.client.RestClient.create();
+        try {
+            return restClient.get()
+                    .uri("https://www.googleapis.com/oauth2/v3/userinfo")
+                    .header("Authorization", "Bearer " + accessToken)
+                    .retrieve()
+                    .body(GoogleUserInfo.class);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.OAUTH_PROVIDER_ERROR);
+        }
+    }
+
+    // Google API 응답 내부 record
+    private record GoogleTokenResponse(
+            @com.fasterxml.jackson.annotation.JsonProperty("access_token") String accessToken,
+            @com.fasterxml.jackson.annotation.JsonProperty("id_token") String idToken
+    ) {}
+
+    private record GoogleUserInfo(
+            String sub,
+            String email,
+            String name,
+            String picture
+    ) {}
 
     // ── 7. 토큰 갱신
     public RefreshTokenPair refresh(String refreshToken){
