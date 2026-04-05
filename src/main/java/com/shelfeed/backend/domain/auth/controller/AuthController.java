@@ -44,7 +44,7 @@ public class AuthController {
     }
 
     // 3. 이메일 인증 코드 재발송  POST /api/v1/auth/email/resend
-    @PostMapping("/api/v1/auth/email/resend")
+    @PostMapping("/email/resend")
     public ApiResponse<Void>resendEmailCode(
             @Valid@RequestBody EmailResendRequest request){
         authService.resendEmailCode(request);
