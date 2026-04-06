@@ -16,8 +16,8 @@ public class UserProfileResponse {
     private int followerCount;
     private int followingCount;
     private int reviewCount;
-    private boolean isFollowing;   // TODO: Follow 도메인 구현 후 연결
-    private boolean isFollowedBy;  // TODO: Follow 도메인 구현 후 연결
+    private boolean isFollowing;   // Follow 도메인 구현 후 연결
+    private boolean isFollowedBy;  // Follow 도메인 구현 후 연결
 
     public static UserProfileResponse of(Member member){
         return UserProfileResponse.builder()
