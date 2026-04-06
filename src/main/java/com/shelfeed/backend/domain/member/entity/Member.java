@@ -98,7 +98,7 @@ public class Member extends BaseTimeEntity {
     }
 
     // 비즈니스 메서드
-    public void updateProfile(String nickname, String bio, String profileImageUrl) {
+    public void updateProfile(String nickname, String bio, String profileImageUrl, LibraryVisibility libraryVisibility) {
         this.nickname = nickname;
         this.bio = bio;
         this.profileImageUrl = profileImageUrl;
