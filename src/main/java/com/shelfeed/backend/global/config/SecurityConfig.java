@@ -39,16 +39,16 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)//CSRF 방어기능 끔 : 세션 대신 JWT 사용할 거니까
                 .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))//무상태 모드 : JWT 사용하려고
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))//무상태 모드(서버가 세션 저장 안함) : JWT 사용하려고
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PUBLIC_URLS).permitAll()// 위에 PUBLIC_URLS은 통과,
                         .anyRequest().authenticated()// 나머지 요청은 인증되어야 한다
-                ).addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);//;
+                ).addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);//모든 요청마다 JWT 검증 필터 설정
 
         return http.build();
     }
 
-    @Bean
+    @Bean//단방향 암호화
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
