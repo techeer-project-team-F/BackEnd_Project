@@ -3,7 +3,9 @@ package com.shelfeed.backend.domain.member.service;
 import com.shelfeed.backend.domain.member.dto.request.UpdateProfileRequest;
 import com.shelfeed.backend.domain.member.dto.response.MyProfileResponse;
 import com.shelfeed.backend.domain.member.dto.response.UpdateProfileResponse;
+import com.shelfeed.backend.domain.member.dto.response.UserProfileResponse;
 import com.shelfeed.backend.domain.member.entity.Member;
+import com.shelfeed.backend.domain.member.enums.MemberStatus;
 import com.shelfeed.backend.domain.member.repository.MemberRepository;
 import com.shelfeed.backend.global.common.exception.BusinessException;
 import com.shelfeed.backend.global.common.exception.ErrorCode;
@@ -36,7 +38,17 @@ public class MemberService {
 
         return UpdateProfileResponse.of(member);
     }
+    // ── 4. 타 유저 프로필 조회
+    @Transactional(readOnly = true)
+    public UserProfileResponse getUserProfile(Long targetUserId){
+        Member member = memberRepository.findByMemberUserId(targetUserId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
 
+        if (member.getStatus() == MemberStatus.WITHDRAWN) {
+            throw new BusinessException(ErrorCode.WITHDRAWN_MEMBER);
+        }
+        return UserProfileResponse.of(member);
+    }
 
 
 }
