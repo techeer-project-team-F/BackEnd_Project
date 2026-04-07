@@ -1,5 +1,5 @@
 package com.shelfeed.backend.global.config;
-
+//JAP 설정
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;

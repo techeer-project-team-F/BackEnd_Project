@@ -1,4 +1,5 @@
 package com.shelfeed.backend.global.config;
+//스프링 시큐리티 인증/인가 설정, PasswordEncoder 설정 , JWT 필터
 import com.shelfeed.backend.global.jwt.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;

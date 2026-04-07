@@ -1,5 +1,5 @@
 package com.shelfeed.backend.global.redis;
-
+//리프레시 토큰 저장, 블랙리스트 관리
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;

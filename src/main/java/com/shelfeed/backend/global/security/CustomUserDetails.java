@@ -1,4 +1,5 @@
 package com.shelfeed.backend.global.security;
+//Spring Security UserDetails(Security가 인증하기 위해 정보를 정의한 인터페이스)에 멤버 객체 추가
 
 import com.shelfeed.backend.domain.member.entity.Member;
 import com.shelfeed.backend.domain.member.enums.MemberStatus;

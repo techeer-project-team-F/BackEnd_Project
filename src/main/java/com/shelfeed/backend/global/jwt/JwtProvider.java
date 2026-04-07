@@ -1,5 +1,5 @@
 package com.shelfeed.backend.global.jwt;
-
+//JWT 액세스/리프레시 토큰 생성, 검증 등등
 import com.shelfeed.backend.domain.member.entity.Member;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;

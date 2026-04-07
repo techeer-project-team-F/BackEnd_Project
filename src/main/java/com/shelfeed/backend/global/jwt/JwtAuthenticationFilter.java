@@ -1,5 +1,5 @@
 package com.shelfeed.backend.global.jwt;
-
+//요청에서 JWT를 검증하고 SecurityContext에 사용자 정보 저장
 import com.shelfeed.backend.global.redis.RedisService;
 import com.shelfeed.backend.global.security.CustomUserDetailsService;
 import io.jsonwebtoken.ExpiredJwtException;

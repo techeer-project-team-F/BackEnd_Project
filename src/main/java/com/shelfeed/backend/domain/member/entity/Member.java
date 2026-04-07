@@ -113,5 +113,14 @@ public class Member extends BaseTimeEntity {
         this.withdrawnAt = LocalDateTime.now();
     }
     public void verifyEmail(){this.emailVerified = true;}
+
+    public void maskUserlInfo() {
+        this.email = "withdrawn_" + this.memberUserId + "@deleted.com";
+        this.nickname = "탈퇴한 사용자";
+        this.profileImageUrl = null;
+        this.bio = null;
+        this.status = MemberStatus.WITHDRAWN;
+        this.withdrawnAt = LocalDateTime.now();
+    }
 }
 
