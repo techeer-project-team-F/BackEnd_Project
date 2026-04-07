@@ -1,5 +1,6 @@
 package com.shelfeed.backend.domain.member.service;
 
+import com.shelfeed.backend.domain.member.dto.request.ChangePasswordRequest;
 import com.shelfeed.backend.domain.member.dto.request.UpdateProfileRequest;
 import com.shelfeed.backend.domain.member.dto.response.MyProfileResponse;
 import com.shelfeed.backend.domain.member.dto.response.UpdateProfileResponse;
@@ -9,7 +10,10 @@ import com.shelfeed.backend.domain.member.enums.MemberStatus;
 import com.shelfeed.backend.domain.member.repository.MemberRepository;
 import com.shelfeed.backend.global.common.exception.BusinessException;
 import com.shelfeed.backend.global.common.exception.ErrorCode;
+import com.shelfeed.backend.global.jwt.JwtProvider;
+import com.shelfeed.backend.global.redis.RedisService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +23,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class MemberService {
 
     private final MemberRepository memberRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final RedisService redisService;
+    private final JwtProvider jwtProvider;
+
+    // ──1. 온보딩(추후 만들예정)
+
     // ── 2. 내 프로필 조회
     @Transactional(readOnly = true)
     public MyProfileResponse getMyProfile(Long memberUserId){
@@ -49,7 +59,32 @@ public class MemberService {
         }
         return UserProfileResponse.of(member);
     }
+    // ── 5. 비밀번호 변경
+    public NewTokenPair changePassword(Long memberUserId, ChangePasswordRequest request){
+        Member member = memberRepository.findByMemberUserId(memberUserId)
+                .orElseThrow(()-> new BusinessException(ErrorCode.NO_PASSWORD_ACCOUNT));
+
+        if (member.getPassword() == null) {
+            throw new BusinessException(ErrorCode.NO_PASSWORD_ACCOUNT);//빈 값이면 변경 불가
+        }
+
+        if (!passwordEncoder.matches(request.getCurrentPassword(), member.getPassword())) {
+            throw new BusinessException(ErrorCode.INVALID_CURRENT_PASSWORD);//현재 비밀번호가 틀리면 변경불가
+        }
+
+        if (passwordEncoder.matches(request.getNewPassword(),member.getPassword())) {
+            throw new BusinessException(ErrorCode.SAME_PASSWORD);//바꿀 비번이랑 지금 비번이랑 같으면 변경불가
+        }
+
+        member.changePassword(passwordEncoder.encode(request.getNewPassword()));// 비번 변경
+
+        // 기존 토큰 없애고 새 토큰 발급
+        String newAccessToken = jwtProvider.generateAccessToken(member);
+        String newRefreshToken = jwtProvider.generateRefreshToken(member);
+        redisService.saveRefreshToken(memberUserId, newRefreshToken, jwtProvider.getRefreshTokenExpiresIn());
+        return new NewTokenPair(newAccessToken, newRefreshToken, jwtProvider.getAccessTokenExpiresIn());
 
 
+    }
+    public record NewTokenPair(String accessToken, String refreshToken, long accessTokenExpiresIn) {}
 }
-
