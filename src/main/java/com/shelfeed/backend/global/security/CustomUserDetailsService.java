@@ -1,5 +1,5 @@
 package com.shelfeed.backend.global.security;
-
+// 사용자 조회해서 CustomUserDetails로 바꿔주는 로직
 import com.shelfeed.backend.domain.member.entity.Member;
 import com.shelfeed.backend.domain.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;

@@ -1,5 +1,5 @@
 package com.shelfeed.backend.global.common.response;
-
+//모든 API 응답을 status/code/message/data 구조로 만들어 놓은 파일
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
 import lombok.Getter;

@@ -2,6 +2,7 @@ package com.shelfeed.backend.domain.member.service;
 
 import com.shelfeed.backend.domain.member.dto.request.ChangePasswordRequest;
 import com.shelfeed.backend.domain.member.dto.request.UpdateProfileRequest;
+import com.shelfeed.backend.domain.member.dto.request.WithdrawRequest;
 import com.shelfeed.backend.domain.member.dto.response.MyProfileResponse;
 import com.shelfeed.backend.domain.member.dto.response.UpdateProfileResponse;
 import com.shelfeed.backend.domain.member.dto.response.UserProfileResponse;
@@ -87,4 +88,27 @@ public class MemberService {
 
     }
     public record NewTokenPair(String accessToken, String refreshToken, long accessTokenExpiresIn) {}
+
+    // ── 6. 회원 탈퇴
+    public void withdraw(Long memberUserId, String accessToken, WithdrawRequest request){
+        Member member = memberRepository.findByMemberUserId(memberUserId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+
+        if (member.getPassword() != null) {//요청 비번이 없거나
+            if (request.getPassword() == null || !passwordEncoder.matches(request.getPassword(), member.getPassword())){//기존 비번인증 안되면
+                    throw new BusinessException(ErrorCode.INVALID_PASSWORD);
+            }
+        }
+
+        member.maskUserlInfo();
+
+        // 토큰 없애기
+        long remainingMs = jwtProvider.getRemainingExpiryMs(accessToken);
+        if (remainingMs > 0) {
+            redisService.addToBlacklist(accessToken,remainingMs);
+        }
+        redisService.deleteRefreshToken(memberUserId);
+    }
+
+
 }

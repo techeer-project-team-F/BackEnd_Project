@@ -1,5 +1,5 @@
 package com.shelfeed.backend.global.common.exception;
-
+//에러코드 관리
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 

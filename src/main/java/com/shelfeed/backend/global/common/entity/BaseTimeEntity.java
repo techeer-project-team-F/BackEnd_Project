@@ -1,5 +1,5 @@
 package com.shelfeed.backend.global.common.entity;
-
+//엔티티에 createdAt, updatedAt 넣기 위한 부모 클래스
 import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.MappedSuperclass;

@@ -1,5 +1,5 @@
 package com.shelfeed.backend.global.common.exception;
-
+// 예외를 ApiResponse형태로 바꿔서 에러응답 반환
 import com.shelfeed.backend.global.common.response.ApiResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;

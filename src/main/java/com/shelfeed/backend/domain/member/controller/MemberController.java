@@ -2,6 +2,7 @@ package com.shelfeed.backend.domain.member.controller;
 
 import com.shelfeed.backend.domain.member.dto.request.ChangePasswordRequest;
 import com.shelfeed.backend.domain.member.dto.request.UpdateProfileRequest;
+import com.shelfeed.backend.domain.member.dto.request.WithdrawRequest;
 import com.shelfeed.backend.domain.member.dto.response.MyProfileResponse;
 import com.shelfeed.backend.domain.member.dto.response.UpdateProfileResponse;
 import com.shelfeed.backend.domain.member.dto.response.UserProfileResponse;
@@ -69,4 +70,40 @@ public class MemberController {
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
+
+    // 6. 회원 탈퇴  DELETE /api/v1/users/me
+    @DeleteMapping("/me")
+    public ApiResponse<Void> withdraw(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestHeader("Authorization") String bearerToken,//요청헤더에서 Authorization 만 가져오기
+            @RequestBody WithdrawRequest request, HttpServletResponse response){
+        String accessToken = bearerToken.substring(7);
+        memberService.withdraw(userDetails.getMember().getMemberId(), accessToken, request);
+        deleteRefreshTokenCookie(response);
+        return ApiResponse.success(200,"회원 탈퇴가 완료되었습니다.");
+    }
+
+    private void deleteRefreshTokenCookie(HttpServletResponse response) {
+        ResponseCookie cookie = ResponseCookie.from("refreshToken","")
+                .httpOnly(true)// XSS 보안
+                .secure(true)//HTTPS 통신만 허용
+                .sameSite("Strict")//CSRF 차단
+                .path("/api/v1/auth")//인증 주소로 요청 보낼 때만 쿠키 따라기도록
+                .maxAge(0)//토큰 유효기간
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
