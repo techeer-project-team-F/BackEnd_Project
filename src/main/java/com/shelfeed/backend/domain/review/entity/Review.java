@@ -88,6 +88,7 @@ public class Review extends BaseTimeEntity {
         review.reviewStatus = reviewStatus;
         return review;
     }
+    //업댓
     public void update(byte rating, String content, String quote, Integer readPages, boolean isSpoiler,
                        ReviewVisibility reviewVisibility, ReviewStatus reviewStatus){
         this.rating = rating;
@@ -99,12 +100,10 @@ public class Review extends BaseTimeEntity {
         this.reviewStatus = reviewStatus;
     }
 
-
-
     // 비즈니스 메서드
     // 좋아요 수 증감
     public void increaseLikeCount() {this.likeCount++;}
-    public void decreaseLikeCount() {if (this.likeCount > 0) this.commentCount--;}
+    public void decreaseLikeCount() {if (this.likeCount > 0) this.likeCount--;}
 
     //댓글 수 증감
     public void increaseCommentCount(){this.commentCount++;}
@@ -118,6 +117,4 @@ public class Review extends BaseTimeEntity {
         this.isDeleted = true;
         this.deletedAt = LocalDateTime.now();
     }
-
-
 }
