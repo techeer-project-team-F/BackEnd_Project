@@ -3,6 +3,7 @@ package com.shelfeed.backend.domain.review.entity;
 import com.shelfeed.backend.domain.book.entity.Book;
 import com.shelfeed.backend.domain.library.entity.LibraryBook;
 import com.shelfeed.backend.domain.member.entity.Member;
+import com.shelfeed.backend.domain.review.enums.ReviewStatus;
 import com.shelfeed.backend.domain.review.enums.ReviewVisibility;
 import com.shelfeed.backend.global.common.entity.BaseTimeEntity;
 import jakarta.persistence.*;
@@ -38,13 +39,20 @@ public class Review extends BaseTimeEntity {
     @Column(nullable = false)
     private byte rating;
 
-    @Column(columnDefinition = "Text", nullable = false)
+    @Column(columnDefinition = "Text")
     private String content;
 
     private Integer readPages;
 
     @Column(nullable = false)
     private boolean isSpoiler;
+
+    @Column(columnDefinition = "Text")
+    private String quote;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 10)
+    private ReviewStatus reviewStatus;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 10)
@@ -65,22 +73,37 @@ public class Review extends BaseTimeEntity {
     //정적 메서드
     //리뷰 적을 때 컬럼 값을 제공해줘야하는 기본 메서드 불완전한 객체 방지
     public static Review create(Member member, Book book, LibraryBook libraryBook,
-                                byte rating, String content, boolean isSpoiler,
-                                ReviewVisibility reviewVisibility) {
+                                byte rating, String content, String quote ,boolean isSpoiler,
+                                Integer readPages ,ReviewVisibility reviewVisibility, ReviewStatus reviewStatus) {
         Review review = new Review();
         review.member = member;
         review.book = book;
         review.libraryBook = libraryBook;
         review.rating = rating;
         review.content = content;
+        review.quote = quote;
+        review.readPages = readPages;
         review.isSpoiler = isSpoiler;
         review.reviewVisibility = reviewVisibility;
+        review.reviewStatus = reviewStatus;
         return review;
     }
+    //업댓
+    public void update(byte rating, String content, String quote, Integer readPages, boolean isSpoiler,
+                       ReviewVisibility reviewVisibility, ReviewStatus reviewStatus){
+        this.rating = rating;
+        this.content = content;
+        this.quote = quote;
+        this.readPages = readPages;
+        this.isSpoiler = isSpoiler;
+        this.reviewVisibility = reviewVisibility;
+        this.reviewStatus = reviewStatus;
+    }
+
     // 비즈니스 메서드
     // 좋아요 수 증감
     public void increaseLikeCount() {this.likeCount++;}
-    public void decreaseLikeCount() {if (this.likeCount > 0) this.commentCount--;}
+    public void decreaseLikeCount() {if (this.likeCount > 0) this.likeCount--;}
 
     //댓글 수 증감
     public void increaseCommentCount(){this.commentCount++;}
@@ -94,6 +117,4 @@ public class Review extends BaseTimeEntity {
         this.isDeleted = true;
         this.deletedAt = LocalDateTime.now();
     }
-
-
 }
