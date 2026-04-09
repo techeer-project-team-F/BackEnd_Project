@@ -36,6 +36,9 @@ public class Comment extends BaseTimeEntity{
     private String content;
 
     @Column(nullable = false)
+    private int likeCount = 0;
+
+    @Column(nullable = false)
     private boolean isDeleted = false;
 
     private LocalDateTime deletedAt;
@@ -67,5 +70,16 @@ public class Comment extends BaseTimeEntity{
         this.isDeleted = true;
         this.deletedAt = LocalDateTime.now();
     }
+
+    public void update(String content){
+        this.content = content;
+    }
+
+    // 좋아요 증감
+    public void increaseLikeCount() { this.likeCount ++;}
+    public void decreaseLikeCount(){
+        if (this.likeCount > 0){this.likeCount --;}
+    }
+
 
 }

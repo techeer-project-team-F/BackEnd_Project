@@ -43,8 +43,14 @@ public class LibraryBook extends BaseTimeEntity {
         libraryBook.status =status;
         return libraryBook;
     }
-    public void updateStatus(ReadingStatus status){
-        this.status = status;
+    // 도서 상태 변경하면 날짜 업로드
+    public void updateStatus(ReadingStatus newStatus){
+        this.status =newStatus;
+        if (this.startedAt == null && newStatus == ReadingStatus.READING){//상태가 시작
+            this.startedAt = LocalDate.now();//읽기 시작한 날짜기록
+        }
+        if (newStatus == ReadingStatus.FINISHED) {//상태가 마침
+            this.finishedAt = LocalDate.now();// 다읽은 날짜 기록
+        }
     }
-
 }
