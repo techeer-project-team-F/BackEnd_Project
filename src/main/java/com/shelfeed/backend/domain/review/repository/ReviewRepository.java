@@ -25,9 +25,9 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
                                @Param("cursor") Long cursor,
                                Pageable pageable);
 
-    @Query("SELECT r FROM Review r WHERE r.member = :member AND r.isDeleted = false" +
-            " AND r.reviewVisibility = 'PUBLIC' AND r.reviewStatus = 'PUBLISHED'" +
-            "AND (:cursor IS NULL OR r.reviewId < :cursor)" +
+    @Query("SELECT r FROM Review r WHERE r.member = :member AND r.isDeleted = false " +
+            "AND r.reviewVisibility = 'PUBLIC' AND r.reviewStatus = 'PUBLISHED' " +
+            "AND (:cursor IS NULL OR r.reviewId < :cursor) " +
             "ORDER BY r.reviewId DESC")
     List<Review> findUserReviews(@Param("member") Member member, @Param("cursor") Long cursor,
                                  Pageable pageable);
