@@ -7,8 +7,8 @@ import java.util.Optional;
 
 public interface CommentLikeRepository extends JpaRepository<CommentLike,Long> {
 
-    boolean existsByCommentIdAndMemberId(Long commentId, Long memberId);//중복 조회
+    boolean existsByComment_CommentIdAndMember_MemberUserId(Long commentId, Long memberUserId);//중복 조회
 
-    Optional<CommentLike> findByCommentIdAndMemberId(Long commentId, Long memberId); //삭제 대상 조회 용도
+    Optional<CommentLike> findByComment_CommentIdAndMember_MemberUserId(Long commentId, Long memberUserId); //삭제 대상 조회 용도
 
 }

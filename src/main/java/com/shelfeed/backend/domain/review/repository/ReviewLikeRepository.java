@@ -7,7 +7,7 @@ import java.util.Optional;
 
 public interface ReviewLikeRepository extends JpaRepository<ReviewLike,Long> {
 
-    boolean existsByReviewIdAndMemberId(Long reviewId, Long memberId);// 좋아요 중복확인
+    boolean existsByReview_ReviewIdAndMember_MemberUserId(Long reviewId, Long memberUserId);// 좋아요 중복확인
 
-    Optional<ReviewLike> findByReviewIdAndMemberId(Long reviewId, Long memberId);// 좋아요 취소 할 때 삭제 대상 조회용도
+    Optional<ReviewLike> findByReview_ReviewIdAndMember_MemberUserId(Long reviewId, Long memberUserId);// 좋아요 취소 할 때 삭제 대상 조회용도
 }
