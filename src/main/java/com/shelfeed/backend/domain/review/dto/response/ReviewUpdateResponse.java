@@ -1,5 +1,6 @@
 package com.shelfeed.backend.domain.review.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.shelfeed.backend.domain.review.entity.Review;
 import com.shelfeed.backend.domain.review.enums.ReviewStatus;
 import com.shelfeed.backend.domain.review.enums.ReviewVisibility;
@@ -17,7 +18,8 @@ public class ReviewUpdateResponse {
     private String content;
     private String quote;
     private Integer readPages;
-    private Boolean isSpoiler;
+    @JsonProperty("isSpoiler")
+    private boolean isSpoiler;
     private ReviewVisibility reviewVisibility;
     private ReviewStatus reviewStatus;
     private List<String> tags;

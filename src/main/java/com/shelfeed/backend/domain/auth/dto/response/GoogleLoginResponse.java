@@ -1,5 +1,6 @@
 package com.shelfeed.backend.domain.auth.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.shelfeed.backend.domain.member.entity.Member;
 import lombok.Builder;
 import lombok.Getter;
@@ -9,7 +10,8 @@ import lombok.Getter;
 public class GoogleLoginResponse {
     private String accessToken;
     private Long accessTokenExpiresIn;
-    private Boolean isNewUser;
+    @JsonProperty("isNewUser")
+    private boolean isNewUser;
     private UserInfo user;
 
     @Getter
