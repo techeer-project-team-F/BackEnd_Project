@@ -49,7 +49,7 @@ oauth2:
   google:
     client-id: ${GOOGLE_CLIENT_ID}
     client-secret: ${GOOGLE_CLIENT_SECRET}
-    redirect-uri: ${GOOGLE_REDIRECT_URI:http://localhost:8080/login/oauth2/code/google}
+    redirect-uri: ${GOOGLE_REDIRECT_URI:http://localhost:5173/auth/callback/google}
 
 aladin:
   api:
