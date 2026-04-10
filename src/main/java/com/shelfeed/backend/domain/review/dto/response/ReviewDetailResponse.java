@@ -19,13 +19,13 @@ public class ReviewDetailResponse {
     private String content;
     private String quote;
     private Integer readPages;
-    private boolean isSpoiler;
+    private Boolean isSpoiler;
     private ReviewVisibility reviewVisibility;
     private ReviewStatus reviewStatus;
     private int likeCount;
     private int commentCount;
-    private boolean isLiked;    // Like 도메인 구현 후 연결
-    private boolean isMine;
+    private Boolean isLiked;    // Like 도메인 구현 후 연결
+    private Boolean isMine;
     private List<String> tags;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

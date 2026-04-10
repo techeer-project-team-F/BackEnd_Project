@@ -9,7 +9,7 @@ import lombok.Getter;
 public class GoogleLoginResponse {
     private String accessToken;
     private Long accessTokenExpiresIn;
-    private boolean isNewUser;
+    private Boolean isNewUser;
     private UserInfo user;
 
     @Getter
