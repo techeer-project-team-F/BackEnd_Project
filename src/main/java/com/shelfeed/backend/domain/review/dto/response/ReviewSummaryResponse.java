@@ -17,12 +17,12 @@ public class ReviewSummaryResponse {
     private byte rating;
     private String content;
     private String quote;
-    private boolean isSpoiler;
+    private Boolean isSpoiler;
     private ReviewVisibility reviewVisibility;
     private ReviewStatus reviewStatus;
     private int likeCount;
     private int commentCount;
-    private boolean isLiked;    // Like 도메인 구현 후 연결
+    private Boolean isLiked;    // Like 도메인 구현 후 연결
     private List<String> tags;
     private LocalDateTime createdAt;
 

@@ -17,7 +17,7 @@ public class ReviewUpdateResponse {
     private String content;
     private String quote;
     private Integer readPages;
-    private boolean isSpoiler;
+    private Boolean isSpoiler;
     private ReviewVisibility reviewVisibility;
     private ReviewStatus reviewStatus;
     private List<String> tags;
