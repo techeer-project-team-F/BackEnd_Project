@@ -1,5 +1,6 @@
 package com.shelfeed.backend.domain.review.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.shelfeed.backend.domain.review.entity.Review;
 import com.shelfeed.backend.domain.review.enums.ReviewStatus;
 import com.shelfeed.backend.domain.review.enums.ReviewVisibility;
@@ -19,13 +20,16 @@ public class ReviewDetailResponse {
     private String content;
     private String quote;
     private Integer readPages;
-    private Boolean isSpoiler;
+    @JsonProperty("isSpoiler")
+    private boolean isSpoiler;
     private ReviewVisibility reviewVisibility;
     private ReviewStatus reviewStatus;
     private int likeCount;
     private int commentCount;
-    private Boolean isLiked;    // Like 도메인 구현 후 연결
-    private Boolean isMine;
+    @JsonProperty("isLiked")
+    private boolean isLiked;    // Like 도메인 구현 후 연결
+    @JsonProperty("isMine")
+    private boolean isMine;
     private List<String> tags;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
