@@ -57,6 +57,9 @@ dependencies {
     // Database
     runtimeOnly("com.mysql:mysql-connector-j")
 
+    // Dotenv (.env 파일 로드)
+    implementation("me.paulschwarz:spring-dotenv:4.0.0")
+
     // Lombok
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
