@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public interface LibraryRepository extends JpaRepository<LibraryBook,Long> {
     //중복 확인
@@ -25,6 +26,10 @@ public interface LibraryRepository extends JpaRepository<LibraryBook,Long> {
 
     //유저 본인의 서재인가 확인
     Optional<LibraryBook> findByLibraryBookIdAndMemberId(Long libraryBookId, Member member);
+
+    // 도서 검색 결과 중 서재에 담긴 isbn13 배치 조회
+    @Query("SELECT lb.book.isbn13 FROM LibraryBook lb WHERE lb.memberId = :member AND lb.book.isbn13 IN :isbn13List")
+    Set<String> findIsbn13InLibrary(@Param("member") Member member, @Param("isbn13List") List<String> isbn13List);
 
     //타 유저 서재 목록
     @Query("SELECT lb FROM LibraryBook lb WHERE lb.memberId = :member " +

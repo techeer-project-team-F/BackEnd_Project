@@ -9,20 +9,7 @@ import java.util.List;
 @Builder
 public class BookSearchListResponse {
     private List<BookSummaryResponse> content;
-    private Long nextCursor;
+    private String nextCursor;  // base64 인코딩된 {"page":N}
     private boolean hasNext;
     private int size;
-
-    public static BookSearchListResponse of(List<BookSummaryResponse>content, int limit){
-        boolean hasNext = content.size()>limit;
-        List<BookSummaryResponse> result = hasNext ? content.subList(0, limit) : content;
-        Long nextCursor = hasNext ? result.get(result.size() -1).getBookId() : null;
-
-    return BookSearchListResponse.builder()
-            .content(result)
-            .nextCursor(nextCursor)
-            .hasNext(hasNext)
-            .size(result.size())
-            .build();
-    }
 }
