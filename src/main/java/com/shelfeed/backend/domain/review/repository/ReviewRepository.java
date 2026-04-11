@@ -32,4 +32,7 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     List<Review> findUserReviews(@Param("member") Member member, @Param("cursor") Long cursor,
                                  Pageable pageable);
     Optional<Review> findByReviewIdAndIsDeletedFalse(Long reviewId);
+
+    // 도서 상세 조회 시 사용자의 해당 도서 감상 ID 조회
+    Optional<Review> findByMemberAndBook_BookIdAndIsDeletedFalse(Member member, Long bookId);
 }

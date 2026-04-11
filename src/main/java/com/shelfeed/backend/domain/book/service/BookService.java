@@ -4,13 +4,17 @@ import com.shelfeed.backend.domain.book.client.AladinApiClient;
 import com.shelfeed.backend.domain.book.dto.external.AladinBookItem;
 import com.shelfeed.backend.domain.book.dto.external.AladinSearchResponse;
 import com.shelfeed.backend.domain.book.dto.request.BookSearchRequest;
+import com.shelfeed.backend.domain.book.dto.respond.BookDetailResponse;
 import com.shelfeed.backend.domain.book.dto.respond.BookSearchListResponse;
 import com.shelfeed.backend.domain.book.dto.respond.BookSummaryResponse;
 import com.shelfeed.backend.domain.book.entity.Book;
 import com.shelfeed.backend.domain.book.repository.BookRepository;
+import com.shelfeed.backend.domain.library.enums.ReadingStatus;
 import com.shelfeed.backend.domain.library.repository.LibraryRepository;
 import com.shelfeed.backend.domain.member.entity.Member;
 import com.shelfeed.backend.domain.member.repository.MemberRepository;
+import com.shelfeed.backend.domain.review.entity.Review;
+import com.shelfeed.backend.domain.review.repository.ReviewRepository;
 import com.shelfeed.backend.global.common.exception.BusinessException;
 import com.shelfeed.backend.global.common.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +37,7 @@ public class BookService {
     private final BookRepository bookRepository;
     private final LibraryRepository libraryRepository;
     private final MemberRepository memberRepository;
+    private final ReviewRepository reviewRepository;
     private final AladinApiClient aladinApiClient;
 
     public BookSearchListResponse searchBooks(BookSearchRequest request, Long memberUserId) {
@@ -96,6 +101,28 @@ public class BookService {
                 .hasNext(hasNext)
                 .size(responses.size())
                 .build();
+    }
+
+    // 도서 상세 조회  GET /api/v1/books/{bookId}
+    public BookDetailResponse getBookDetail(Long bookId, Long memberUserId) {
+        Book book = bookRepository.findById(bookId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.BOOK_NOT_FOUND));
+
+        Member member = memberRepository.findByMemberUserId(memberUserId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+
+        Double averageRating = bookRepository.findAverageRatingByBookId(bookId);
+        Long reviewCount = bookRepository.countReviewsByBookId(bookId);
+
+        ReadingStatus myLibraryStatus = libraryRepository.findByMemberIdAndBook_BookId(member, bookId)
+                .map(lb -> lb.getStatus())
+                .orElse(null);
+
+        Long myReviewId = reviewRepository.findByMemberAndBook_BookIdAndIsDeletedFalse(member, bookId)
+                .map(Review::getReviewId)
+                .orElse(null);
+
+        return BookDetailResponse.of(book, averageRating, reviewCount, myLibraryStatus, myReviewId);
     }
 
     private int decodeCursorToPage(String cursor) {

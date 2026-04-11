@@ -27,6 +27,9 @@ public interface LibraryRepository extends JpaRepository<LibraryBook,Long> {
     //유저 본인의 서재인가 확인
     Optional<LibraryBook> findByLibraryBookIdAndMemberId(Long libraryBookId, Member member);
 
+    // 도서 상세 조회 시 사용자의 해당 도서 서재 상태 조회
+    Optional<LibraryBook> findByMemberIdAndBook_BookId(Member member, Long bookId);
+
     // 도서 검색 결과 중 서재에 담긴 isbn13 배치 조회
     @Query("SELECT lb.book.isbn13 FROM LibraryBook lb WHERE lb.memberId = :member AND lb.book.isbn13 IN :isbn13List")
     Set<String> findIsbn13InLibrary(@Param("member") Member member, @Param("isbn13List") List<String> isbn13List);
