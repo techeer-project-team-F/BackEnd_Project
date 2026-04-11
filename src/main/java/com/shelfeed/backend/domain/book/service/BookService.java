@@ -4,7 +4,10 @@ import com.shelfeed.backend.domain.book.client.AladinApiClient;
 import com.shelfeed.backend.domain.book.dto.external.AladinBookItem;
 import com.shelfeed.backend.domain.book.dto.external.AladinSearchResponse;
 import com.shelfeed.backend.domain.book.dto.request.BookSearchRequest;
+import com.shelfeed.backend.domain.book.dto.request.BookReviewSearchRequest;
 import com.shelfeed.backend.domain.book.dto.respond.BookDetailResponse;
+import com.shelfeed.backend.domain.book.dto.respond.BookReviewListResponse;
+import com.shelfeed.backend.domain.book.dto.respond.BookReviewResponse;
 import com.shelfeed.backend.domain.book.dto.respond.BookSearchListResponse;
 import com.shelfeed.backend.domain.book.dto.respond.BookSummaryResponse;
 import com.shelfeed.backend.domain.book.entity.Book;
@@ -14,12 +17,16 @@ import com.shelfeed.backend.domain.library.repository.LibraryRepository;
 import com.shelfeed.backend.domain.member.entity.Member;
 import com.shelfeed.backend.domain.member.repository.MemberRepository;
 import com.shelfeed.backend.domain.review.entity.Review;
+import com.shelfeed.backend.domain.review.repository.ReviewLikeRepository;
 import com.shelfeed.backend.domain.review.repository.ReviewRepository;
 import com.shelfeed.backend.global.common.exception.BusinessException;
 import com.shelfeed.backend.global.common.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
@@ -38,6 +45,7 @@ public class BookService {
     private final LibraryRepository libraryRepository;
     private final MemberRepository memberRepository;
     private final ReviewRepository reviewRepository;
+    private final ReviewLikeRepository reviewLikeRepository;
     private final AladinApiClient aladinApiClient;
 
     public BookSearchListResponse searchBooks(BookSearchRequest request, Long memberUserId) {
@@ -123,6 +131,38 @@ public class BookService {
                 .orElse(null);
 
         return BookDetailResponse.of(book, averageRating, reviewCount, myLibraryStatus, myReviewId);
+    }
+
+    // 도서 감상 목록 조회  GET /api/v1/books/{bookId}/reviews
+    public BookReviewListResponse getBookReviews(Long bookId, BookReviewSearchRequest request, Long memberUserId) {
+        if (!bookRepository.existsById(bookId)) {
+            throw new BusinessException(ErrorCode.BOOK_NOT_FOUND);
+        }
+
+        int limit = Math.min(request.getLimit(), 50);
+        Sort sort = buildSort(request.getSort());
+        PageRequest pageable = PageRequest.of(0, limit + 1, sort);
+
+        List<Review> reviews = reviewRepository.findBookReviews(bookId, request.getCursor(), pageable);
+
+        // 좋아요 여부 배치 조회
+        List<Long> reviewIds = reviews.stream().map(Review::getReviewId).collect(Collectors.toList());
+        Set<Long> likedReviewIds = reviewLikeRepository.findLikedReviewIds(memberUserId, reviewIds);
+
+        List<BookReviewResponse> responses = reviews.stream()
+                .map(review -> BookReviewResponse.of(review, likedReviewIds.contains(review.getReviewId())))
+                .collect(Collectors.toList());
+
+        return BookReviewListResponse.of(responses, limit);
+    }
+
+    private Sort buildSort(String sort) {
+        return switch (sort) {
+            case "popular"     -> Sort.by(Sort.Order.desc("likeCount"), Sort.Order.desc("reviewId"));
+            case "rating_high" -> Sort.by(Sort.Order.desc("rating"),    Sort.Order.desc("reviewId"));
+            case "rating_low"  -> Sort.by(Sort.Order.asc("rating"),     Sort.Order.desc("reviewId"));
+            default            -> Sort.by(Sort.Order.desc("reviewId")); // latest
+        };
     }
 
     private int decodeCursorToPage(String cursor) {

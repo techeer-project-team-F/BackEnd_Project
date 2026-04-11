@@ -35,4 +35,10 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 
     // 도서 상세 조회 시 사용자의 해당 도서 감상 ID 조회
     Optional<Review> findByMemberAndBook_BookIdAndIsDeletedFalse(Member member, Long bookId);
+
+    // 도서 감상 목록 커서 페이지네이션 (공개 + 발행 상태만)
+    @Query("SELECT r FROM Review r WHERE r.book.bookId = :bookId AND r.isDeleted = false " +
+            "AND r.reviewVisibility = 'PUBLIC' AND r.reviewStatus = 'PUBLISHED' " +
+            "AND (:cursor IS NULL OR r.reviewId < :cursor)")
+    List<Review> findBookReviews(@Param("bookId") Long bookId, @Param("cursor") Long cursor, Pageable pageable);
 }

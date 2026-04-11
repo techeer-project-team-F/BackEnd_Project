@@ -1,7 +1,9 @@
 package com.shelfeed.backend.domain.book.controller;
 
+import com.shelfeed.backend.domain.book.dto.request.BookReviewSearchRequest;
 import com.shelfeed.backend.domain.book.dto.request.BookSearchRequest;
 import com.shelfeed.backend.domain.book.dto.respond.BookDetailResponse;
+import com.shelfeed.backend.domain.book.dto.respond.BookReviewListResponse;
 import com.shelfeed.backend.domain.book.dto.respond.BookSearchListResponse;
 import com.shelfeed.backend.domain.book.service.BookService;
 import com.shelfeed.backend.global.common.response.ApiResponse;
@@ -37,5 +39,15 @@ public class BookController {
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         Long memberUserId = userDetails.getMember().getMemberUserId();
         return ApiResponse.success(200, bookService.getBookDetail(bookId, memberUserId));
+    }
+
+    // 도서 감상 목록 조회  GET /api/v1/books/{bookId}/reviews
+    @GetMapping("/{bookId}/reviews")
+    public ApiResponse<BookReviewListResponse> getBookReviews(
+            @PathVariable Long bookId,
+            @ModelAttribute BookReviewSearchRequest request,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Long memberUserId = userDetails.getMember().getMemberUserId();
+        return ApiResponse.success(200, bookService.getBookReviews(bookId, request, memberUserId));
     }
 }
