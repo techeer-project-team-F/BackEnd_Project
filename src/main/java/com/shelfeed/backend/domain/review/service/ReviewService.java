@@ -8,6 +8,7 @@ import com.shelfeed.backend.domain.member.entity.Member;
 import com.shelfeed.backend.domain.member.repository.MemberRepository;
 import com.shelfeed.backend.domain.review.dto.request.ReviewCreateRequest;
 import com.shelfeed.backend.domain.review.dto.response.ReviewCreateResponse;
+import com.shelfeed.backend.domain.review.dto.response.ReviewDetailResponse;
 import com.shelfeed.backend.domain.review.entity.Review;
 import com.shelfeed.backend.domain.review.entity.ReviewTag;
 import com.shelfeed.backend.domain.review.enums.ReviewStatus;
@@ -26,7 +27,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
+@Transactional(readOnly = true)
 public class ReviewService {
     private final MemberRepository memberRepository;
     private final ReviewRepository reviewRepository;
@@ -36,6 +37,7 @@ public class ReviewService {
     private final ReviewTagRepository reviewTagRepository;
 
     // ── 1 감상 작성
+    @Transactional
     public ReviewCreateResponse createReview(Long memberUserId, ReviewCreateRequest request) {
         Member member = getMember(memberUserId);
         Book book = getBook(request.getBookId());
@@ -66,6 +68,18 @@ public class ReviewService {
         return ReviewCreateResponse.of(review, tagNames);
     }
 
+    //2. 감상 상세 조회 작성 API
+    public ReviewDetailResponse getReview(Long reviewId, Long memberUserId){
+        Review review = getReviewOrThrow(reviewId);//삭제 안된 리뷰 여부(소프트 델리트)
+        boolean isMine = memberUserId != null && review.getMember().getMemberUserId().equals(memberUserId);//본인확인
+        if (!isMine && review.getReviewVisibility().name().equals("PRIVATE")){//비공개 거나 게시물 주인이 아니면
+            throw new BusinessException(ErrorCode.PRIVATE_REVIEW);//비공개 감상
+        }
+        List<String> tags = getTagNames(review);
+        return ReviewDetailResponse.of(review,tags,isMine);
+    }
+
+
     //헬퍼 메소드
     private Member getMember(Long memberUserId) {
         return memberRepository.findByMemberUserId(memberUserId).orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
@@ -83,6 +97,14 @@ public class ReviewService {
             reviewTagRepository.save(ReviewTag.create(review, tag)); // 리뷰,테그 다대다 풀어주는 데이터 생성
             return name;
         }).toList();
+    }
+    private Review getReviewOrThrow(Long reviewId) {
+        return reviewRepository.findByReviewIdAndIsDeletedFalse(reviewId).orElseThrow(()-> new BusinessException(ErrorCode.REVIEW_NOT_FOUND));
+    }
+    //태그 이름 목록 조회
+    private List<String> getTagNames(Review review) {
+        return reviewTagRepository.findByReview(review).stream()
+                .map(reviewTag -> reviewTag.getTag().getTagName()).toList();
     }
 
 }

@@ -2,6 +2,7 @@ package com.shelfeed.backend.domain.review.controller;
 
 import com.shelfeed.backend.domain.review.dto.request.ReviewCreateRequest;
 import com.shelfeed.backend.domain.review.dto.response.ReviewCreateResponse;
+import com.shelfeed.backend.domain.review.dto.response.ReviewDetailResponse;
 import com.shelfeed.backend.domain.review.service.ReviewService;
 import com.shelfeed.backend.global.common.response.ApiResponse;
 import com.shelfeed.backend.global.security.CustomUserDetails;
@@ -26,6 +27,15 @@ public class ReviewController {
             @Valid @RequestBody ReviewCreateRequest request){
         Long memberUserId = userDetails.getMember().getMemberUserId();
         return ApiResponse.success(201,"감상이 작성되었습니다.", reviewService.createReview(memberUserId,request));
+    }
+
+    // 2. 감상 상세 조회  GET /api/v1/reviews/{reviewId}
+    @GetMapping("/reviews/{reviewId}")
+    public ApiResponse<ReviewDetailResponse> getReview(
+            @PathVariable Long reviewId,
+            @AuthenticationPrincipal CustomUserDetails userDetails){
+        Long memberUserId = userDetails != null ? userDetails.getMember().getMemberId() : null;//비회원 접근 허용
+        return ApiResponse.success(200, reviewService.getReview(reviewId,memberUserId));
     }
 
 }
