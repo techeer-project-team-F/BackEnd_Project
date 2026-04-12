@@ -17,4 +17,10 @@ public class Tag {
 
     @Column(length = 100)
     private String tagName;
+    //태그 이름 넣으면 그 이름을 가진 태그를 생성함
+    public static Tag create(String tagName) {
+        Tag tag = new Tag();
+        tag.tagName = tagName;
+        return tag;
+    }
 }
