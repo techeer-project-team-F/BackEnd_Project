@@ -99,7 +99,7 @@ public class ReviewService {
 
         // DRAFT가 PUBLISHED로 바뀌면 reviewCount 증가
         boolean wasPublished = review.getReviewStatus() == ReviewStatus.PUBLISHED;
-        boolean willPublish = review.getReviewStatus() == ReviewStatus.PUBLISHED;
+        boolean willPublish = request.getReviewStatus() == ReviewStatus.PUBLISHED;
         if (!wasPublished && willPublish){
             review.getMember().increaseReviewCount();
         }

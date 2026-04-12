@@ -40,7 +40,7 @@ public class ReviewController {
     public ApiResponse<ReviewDetailResponse> getReview(
             @PathVariable Long reviewId,
             @AuthenticationPrincipal CustomUserDetails userDetails){
-        Long memberUserId = userDetails != null ? userDetails.getMember().getMemberId() : null;//비회원 접근 허용
+        Long memberUserId = userDetails != null ? userDetails.getMember().getMemberUserId() : null;//비회원 접근 허용
         return ApiResponse.success(200, reviewService.getReview(reviewId,memberUserId));
     }
     // 3. 감상 수정  PUT /api/v1/reviews/{reviewId}
@@ -49,7 +49,7 @@ public class ReviewController {
             @PathVariable Long reviewId,
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody ReviewUpdateRequest request) {
-        Long memberUserId = userDetails.getMember().getMemberId();
+        Long memberUserId = userDetails.getMember().getMemberUserId();
         return ApiResponse.success(200, "감상이 수정되었습니다.", reviewService.updateReview(reviewId,memberUserId,request));
     }
     // 4. 감상 삭제  DELETE /api/v1/reviews/{reviewId}
@@ -57,7 +57,8 @@ public class ReviewController {
     public ApiResponse<Void> deleteReview(
             @PathVariable Long reviewId,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        Long memberUserId = userDetails.getMember().getMemberId();
+        Long memberUserId = userDetails.getMember().getMemberUserId();
+        reviewService.deleteReview(reviewId,memberUserId);
         return ApiResponse.success(200, "감상이 삭제되었습니다.");
     }
 
@@ -68,7 +69,7 @@ public class ReviewController {
             @RequestParam(required = false) ReviewStatus status,
             @RequestParam(required = false) Long cursor,
             @RequestParam(defaultValue = "20") int limit) {
-        Long memberUserId = userDetails.getMember().getMemberId();
+        Long memberUserId = userDetails.getMember().getMemberUserId();
         return ApiResponse.success(200, reviewService.getMyReviews(memberUserId,status,cursor,limit));
     }
 
