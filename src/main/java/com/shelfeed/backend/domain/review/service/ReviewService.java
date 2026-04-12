@@ -7,8 +7,10 @@ import com.shelfeed.backend.domain.library.repository.LibraryRepository;
 import com.shelfeed.backend.domain.member.entity.Member;
 import com.shelfeed.backend.domain.member.repository.MemberRepository;
 import com.shelfeed.backend.domain.review.dto.request.ReviewCreateRequest;
+import com.shelfeed.backend.domain.review.dto.request.ReviewUpdateRequest;
 import com.shelfeed.backend.domain.review.dto.response.ReviewCreateResponse;
 import com.shelfeed.backend.domain.review.dto.response.ReviewDetailResponse;
+import com.shelfeed.backend.domain.review.dto.response.ReviewUpdateResponse;
 import com.shelfeed.backend.domain.review.entity.Review;
 import com.shelfeed.backend.domain.review.entity.ReviewTag;
 import com.shelfeed.backend.domain.review.enums.ReviewStatus;
@@ -68,7 +70,7 @@ public class ReviewService {
         return ReviewCreateResponse.of(review, tagNames);
     }
 
-    //2. 감상 상세 조회 작성 API
+    //2. 감상 상세 조회
     public ReviewDetailResponse getReview(Long reviewId, Long memberUserId){
         Review review = getReviewOrThrow(reviewId);//삭제 안된 리뷰 여부(소프트 델리트)
         boolean isMine = memberUserId != null && review.getMember().getMemberUserId().equals(memberUserId);//본인확인
@@ -77,6 +79,37 @@ public class ReviewService {
         }
         List<String> tags = getTagNames(review);
         return ReviewDetailResponse.of(review,tags,isMine);
+    }
+
+    //3. 감상 수정
+    public ReviewUpdateResponse updateReview(Long reviewId, Long memberUserId, ReviewUpdateRequest request){
+        Review review = getReviewOrThrow(reviewId);//삭제 안된 리뷰 여부(소프트 델리트)
+        // 내 감상인가 확인
+        if (!review.getMember().getMemberUserId().equals(memberUserId)){
+            throw new BusinessException(ErrorCode.NOT_REVIEW_OWNER);
+        }
+
+        //content, quote 둘 다 필요
+        if (request.getContent() == null && request.getQuote() == null){
+            throw new BusinessException(ErrorCode.CONTENT_OR_QUOTE_REQUIRED);
+        }
+
+        // DRAFT가 PUBLISHED로 바뀌면 reviewCount 증가
+        boolean wasPublished = review.getReviewStatus() == ReviewStatus.PUBLISHED;
+        boolean willPublish = review.getReviewStatus() == ReviewStatus.PUBLISHED;
+        if (!wasPublished && willPublish){
+            review.getMember().increaseReviewCount();
+        }
+        //업데이트
+        review.update(
+                request.getRating(),request.getContent(), request.getQuote(), request.getReadPages(), request.isSpoiler(),
+                request.getReviewVisibility(), request.getReviewStatus()
+        );
+        //테그 교체
+        reviewTagRepository.deleteByReview(review);
+        List<String> tagNames = saveTags(review,request.getTags());
+
+        return ReviewUpdateResponse.of(review,tagNames);
     }
 
 

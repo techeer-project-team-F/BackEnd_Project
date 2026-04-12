@@ -1,8 +1,10 @@
 package com.shelfeed.backend.domain.review.controller;
 
 import com.shelfeed.backend.domain.review.dto.request.ReviewCreateRequest;
+import com.shelfeed.backend.domain.review.dto.request.ReviewUpdateRequest;
 import com.shelfeed.backend.domain.review.dto.response.ReviewCreateResponse;
 import com.shelfeed.backend.domain.review.dto.response.ReviewDetailResponse;
+import com.shelfeed.backend.domain.review.dto.response.ReviewUpdateResponse;
 import com.shelfeed.backend.domain.review.service.ReviewService;
 import com.shelfeed.backend.global.common.response.ApiResponse;
 import com.shelfeed.backend.global.security.CustomUserDetails;
@@ -36,6 +38,15 @@ public class ReviewController {
             @AuthenticationPrincipal CustomUserDetails userDetails){
         Long memberUserId = userDetails != null ? userDetails.getMember().getMemberId() : null;//비회원 접근 허용
         return ApiResponse.success(200, reviewService.getReview(reviewId,memberUserId));
+    }
+
+    @GetMapping("/reviews/{reviewId}")
+    public ApiResponse<ReviewUpdateResponse> updateReview(
+            @PathVariable Long reviewId,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Valid @RequestBody ReviewUpdateRequest request) {
+        Long memberUserId = userDetails.getMember().getMemberId();
+        return ApiResponse.success(200, "감상이 수정되었습니다.", reviewService.updateReview(reviewId,memberUserId,request));
     }
 
 }
