@@ -111,6 +111,20 @@ public class ReviewService {
 
         return ReviewUpdateResponse.of(review,tagNames);
     }
+    //4. 감상 삭제
+    public void deleteReview(Long reviewId, Long memberUserId) {
+        Review review = getReviewOrThrow(reviewId);//삭제 안된 리뷰 여부(소프트 델리트)
+
+        if (!review.getMember().getMemberUserId().equals(memberUserId)) {
+            throw new BusinessException(ErrorCode.NOT_REVIEW_OWNER);
+        }
+        review.softDelect();
+
+        if (review.getReviewStatus() == ReviewStatus.PUBLISHED){
+            review.getMember().decreaseReviewCount();
+        }
+    }
+
 
 
     //헬퍼 메소드

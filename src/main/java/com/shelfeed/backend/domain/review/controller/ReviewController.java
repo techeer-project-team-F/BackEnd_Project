@@ -39,7 +39,7 @@ public class ReviewController {
         Long memberUserId = userDetails != null ? userDetails.getMember().getMemberId() : null;//비회원 접근 허용
         return ApiResponse.success(200, reviewService.getReview(reviewId,memberUserId));
     }
-
+    // 3. 감상 수정  PUT /api/v1/reviews/{reviewId}
     @GetMapping("/reviews/{reviewId}")
     public ApiResponse<ReviewUpdateResponse> updateReview(
             @PathVariable Long reviewId,
@@ -48,5 +48,12 @@ public class ReviewController {
         Long memberUserId = userDetails.getMember().getMemberId();
         return ApiResponse.success(200, "감상이 수정되었습니다.", reviewService.updateReview(reviewId,memberUserId,request));
     }
-
+    // 4. 감상 삭제  DELETE /api/v1/reviews/{reviewId}
+    @GetMapping("/reviews/{reviewId}")
+    public ApiResponse<Void> deleteReview(
+            @PathVariable Long reviewId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Long memberUserId = userDetails.getMember().getMemberId();
+        return ApiResponse.success(200, "감상이 삭제되었습니다.");
+    }
 }
