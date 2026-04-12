@@ -4,7 +4,9 @@ import com.shelfeed.backend.domain.review.dto.request.ReviewCreateRequest;
 import com.shelfeed.backend.domain.review.dto.request.ReviewUpdateRequest;
 import com.shelfeed.backend.domain.review.dto.response.ReviewCreateResponse;
 import com.shelfeed.backend.domain.review.dto.response.ReviewDetailResponse;
+import com.shelfeed.backend.domain.review.dto.response.ReviewSummaryResponse;
 import com.shelfeed.backend.domain.review.dto.response.ReviewUpdateResponse;
+import com.shelfeed.backend.domain.review.enums.ReviewStatus;
 import com.shelfeed.backend.domain.review.service.ReviewService;
 import com.shelfeed.backend.global.common.response.ApiResponse;
 import com.shelfeed.backend.global.security.CustomUserDetails;
@@ -13,6 +15,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -40,7 +44,7 @@ public class ReviewController {
         return ApiResponse.success(200, reviewService.getReview(reviewId,memberUserId));
     }
     // 3. 감상 수정  PUT /api/v1/reviews/{reviewId}
-    @GetMapping("/reviews/{reviewId}")
+    @PutMapping("/reviews/{reviewId}")
     public ApiResponse<ReviewUpdateResponse> updateReview(
             @PathVariable Long reviewId,
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -49,11 +53,31 @@ public class ReviewController {
         return ApiResponse.success(200, "감상이 수정되었습니다.", reviewService.updateReview(reviewId,memberUserId,request));
     }
     // 4. 감상 삭제  DELETE /api/v1/reviews/{reviewId}
-    @GetMapping("/reviews/{reviewId}")
+    @DeleteMapping("/reviews/{reviewId}")
     public ApiResponse<Void> deleteReview(
             @PathVariable Long reviewId,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         Long memberUserId = userDetails.getMember().getMemberId();
         return ApiResponse.success(200, "감상이 삭제되었습니다.");
+    }
+
+    //5. 내 감상 목록
+    @GetMapping("/reviews/me")
+    public ApiResponse<List<ReviewSummaryResponse>> getMyReviews(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam(required = false) ReviewStatus status,
+            @RequestParam(required = false) Long cursor,
+            @RequestParam(defaultValue = "20") int limit) {
+        Long memberUserId = userDetails.getMember().getMemberId();
+        return ApiResponse.success(200, reviewService.getMyReviews(memberUserId,status,cursor,limit));
+    }
+
+    //6. 타 유저 감상 목록
+    @GetMapping("/members/{userId}/reviews")
+    public ApiResponse<List<ReviewSummaryResponse>> getUserReviews(
+            @PathVariable Long userId,
+            @RequestParam(required = false) Long cursor,
+            @RequestParam(defaultValue = "20") int limit){
+        return ApiResponse.success(200, reviewService.getUserReviews(userId,cursor,limit));
     }
 }

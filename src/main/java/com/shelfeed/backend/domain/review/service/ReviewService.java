@@ -10,6 +10,7 @@ import com.shelfeed.backend.domain.review.dto.request.ReviewCreateRequest;
 import com.shelfeed.backend.domain.review.dto.request.ReviewUpdateRequest;
 import com.shelfeed.backend.domain.review.dto.response.ReviewCreateResponse;
 import com.shelfeed.backend.domain.review.dto.response.ReviewDetailResponse;
+import com.shelfeed.backend.domain.review.dto.response.ReviewSummaryResponse;
 import com.shelfeed.backend.domain.review.dto.response.ReviewUpdateResponse;
 import com.shelfeed.backend.domain.review.entity.Review;
 import com.shelfeed.backend.domain.review.entity.ReviewTag;
@@ -21,6 +22,7 @@ import com.shelfeed.backend.domain.tag.entity.Tag;
 import com.shelfeed.backend.global.common.exception.BusinessException;
 import com.shelfeed.backend.global.common.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -82,6 +84,7 @@ public class ReviewService {
     }
 
     //3. 감상 수정
+    @Transactional
     public ReviewUpdateResponse updateReview(Long reviewId, Long memberUserId, ReviewUpdateRequest request){
         Review review = getReviewOrThrow(reviewId);//삭제 안된 리뷰 여부(소프트 델리트)
         // 내 감상인가 확인
@@ -112,18 +115,38 @@ public class ReviewService {
         return ReviewUpdateResponse.of(review,tagNames);
     }
     //4. 감상 삭제
+    @Transactional
     public void deleteReview(Long reviewId, Long memberUserId) {
         Review review = getReviewOrThrow(reviewId);//삭제 안된 리뷰 여부(소프트 델리트)
-
+        // 내 감상인가 확인
         if (!review.getMember().getMemberUserId().equals(memberUserId)) {
             throw new BusinessException(ErrorCode.NOT_REVIEW_OWNER);
         }
-        review.softDelect();
-
+        review.softDelect();//삭제
+        //PUBLISHED 였으면 리뷰 카운트 감소
         if (review.getReviewStatus() == ReviewStatus.PUBLISHED){
             review.getMember().decreaseReviewCount();
         }
     }
+    //5. 내 감상 목록
+    public List<ReviewSummaryResponse> getMyReviews(Long memberUserId, ReviewStatus status, Long cursor, int limit){
+        Member member = getMember(memberUserId);
+        List<Review> reviews = reviewRepository.findMyReviews(member, status, cursor, PageRequest.of(0, limit + 1));
+        boolean hasNext = reviews.size() > limit;// 다음 페이지 확인
+        if (hasNext) reviews = reviews.subList(0, limit);// 한 개 빼기
+
+        return reviews.stream().map(review -> ReviewSummaryResponse.of(review,getTagNames(review))).toList();
+    }
+    //6. 타 유저 감상 목록
+    public List<ReviewSummaryResponse> getUserReviews(Long userId, Long cursor, int limit) {
+        Member member = getMember(userId);
+        List<Review> reviews = reviewRepository.findUserReviews(member, cursor, PageRequest.of(0, limit + 1));
+        boolean hasNext = reviews.size() > limit;// 다음 페이지 확인
+        if (hasNext) reviews = reviews.subList(0, limit);// 한 개 빼기
+
+        return reviews.stream().map(review -> ReviewSummaryResponse.of(review, getTagNames(review))).toList();
+    }
+
 
 
 
