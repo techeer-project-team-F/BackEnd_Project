@@ -2,6 +2,7 @@ package com.shelfeed.backend.domain.library.dto.respond;
 
 import com.shelfeed.backend.domain.library.entity.LibraryBook;
 import com.shelfeed.backend.domain.library.enums.ReadingStatus;
+import com.shelfeed.backend.domain.review.entity.Review;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -41,7 +42,7 @@ public class LibraryBookDetailResponse {
         private LocalDateTime createdAt;
     }
 
-    public static LibraryBookDetailResponse of(LibraryBook lb){
+    public static LibraryBookDetailResponse of(LibraryBook lb, Review review) {
         return LibraryBookDetailResponse.builder()
                 .libraryBookId(lb.getLibraryBookId())
                 .book(BookDetail.builder()
@@ -56,7 +57,12 @@ public class LibraryBookDetailResponse {
                 .status(lb.getStatus())
                 .startedAt(lb.getStartedAt())
                 .finishedAt(lb.getFinishedAt())
-                .review(null)       // ReviewRepository 연결 후 적용
+                .review(review == null ? null : ReviewSummary.builder()
+                        .reviewId(review.getReviewId())
+                        .rating(review.getRating())
+                        .content(review.getContent())
+                        .createdAt(review.getCreatedAt())
+                        .build())
                 .build();
     }
 }

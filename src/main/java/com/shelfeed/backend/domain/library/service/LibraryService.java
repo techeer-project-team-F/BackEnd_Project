@@ -11,6 +11,7 @@ import com.shelfeed.backend.domain.library.repository.LibraryRepository;
 import com.shelfeed.backend.domain.member.entity.Member;
 import com.shelfeed.backend.domain.member.enums.LibraryVisibility;
 import com.shelfeed.backend.domain.member.repository.MemberRepository;
+import com.shelfeed.backend.domain.review.entity.Review;
 import com.shelfeed.backend.domain.review.repository.ReviewRepository;
 import com.shelfeed.backend.global.common.exception.BusinessException;
 import com.shelfeed.backend.global.common.exception.ErrorCode;
@@ -60,7 +61,9 @@ public class LibraryService {
         Member member = getMember(memberUserId);
         LibraryBook libraryBook = libraryRepository.findByLibraryBookIdAndMemberId(libraryBookId,member)
                 .orElseThrow(()->new BusinessException(ErrorCode.LIBRARY_BOOK_NOT_FOUND));
-        return LibraryBookDetailResponse.of(libraryBook);
+        Review review = reviewRepository.findByMemberAndBook_BookIdAndIsDeletedFalse(member, libraryBook.getBook().getBookId())
+                .orElse(null);
+        return LibraryBookDetailResponse.of(libraryBook, review);
     }
 
     //4. 독서 상태 변경
