@@ -2,10 +2,7 @@ package com.shelfeed.backend.domain.library.controller;
 
 import com.shelfeed.backend.domain.library.dto.request.LibraryBookAddRequest;
 import com.shelfeed.backend.domain.library.dto.request.LibraryStatusUpdateRequest;
-import com.shelfeed.backend.domain.library.dto.respond.LibraryBookAddResponse;
-import com.shelfeed.backend.domain.library.dto.respond.LibraryBookDetailResponse;
-import com.shelfeed.backend.domain.library.dto.respond.LibraryListResponse;
-import com.shelfeed.backend.domain.library.dto.respond.LibraryStatusUpdateResponse;
+import com.shelfeed.backend.domain.library.dto.respond.*;
 import com.shelfeed.backend.domain.library.enums.ReadingStatus;
 import com.shelfeed.backend.domain.library.service.LibraryService;
 import com.shelfeed.backend.global.common.response.ApiResponse;
@@ -63,8 +60,22 @@ public class LibraryController {
     }
 
     //5. 서제에서 도서 제거 DELETE /api/v1/library/{libraryBookId}
+    @DeleteMapping("/library/{libraryBookId}")
+    public ApiResponse<Void> removeBook(
+            @PathVariable Long libraryBookId,
+            @AuthenticationPrincipal CustomUserDetails userDetails){
+        Long memberUserId = userDetails.getMember().getMemberUserId();
+        libraryService.removeBook(libraryBookId, memberUserId);
+        return ApiResponse.success(200,"서재에서 도서가 제거되었습니다.");
+    }
 
     //6. 타 유저 서제 목록 조회 GET /api/v1/members/{userId}/library
-
-
+    @GetMapping("/members/{userId}/library")
+    public ApiResponse<UserLibraryResponse> getUserLibrary(
+            @PathVariable Long userId,
+            @RequestParam(required = false) ReadingStatus status,
+            @RequestParam(required = false) Long cursor,
+            @RequestParam(defaultValue = "20") int limit){
+        return ApiResponse.success(200, libraryService.getUserLibrary(userId,status,cursor,limit));
+    }
 }

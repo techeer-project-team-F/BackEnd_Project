@@ -9,6 +9,7 @@ import com.shelfeed.backend.domain.library.entity.LibraryBook;
 import com.shelfeed.backend.domain.library.enums.ReadingStatus;
 import com.shelfeed.backend.domain.library.repository.LibraryRepository;
 import com.shelfeed.backend.domain.member.entity.Member;
+import com.shelfeed.backend.domain.member.enums.LibraryVisibility;
 import com.shelfeed.backend.domain.member.repository.MemberRepository;
 import com.shelfeed.backend.domain.review.repository.ReviewRepository;
 import com.shelfeed.backend.global.common.exception.BusinessException;
@@ -75,8 +76,30 @@ public class LibraryService {
     }
 
     //5. 서제에서 도서 제거
+    @Transactional
+    public void removeBook(Long libraryBookId, Long memberUserId){
+        Member member = getMember(memberUserId);
+        LibraryBook libraryBook = libraryRepository.findByLibraryBookIdAndMemberId(libraryBookId,member)
+                .orElseThrow(()->new BusinessException(ErrorCode.LIBRARY_BOOK_NOT_FOUND));
+        if (reviewRepository.existsByMember_MemberUserIdAndBook_BookIdAndIsDeletedFalse(memberUserId, libraryBook.getBook().getBookId())) {
+            throw new BusinessException(ErrorCode.REVIEW_EXISTS);
+        }
+        libraryRepository.delete(libraryBook);
+    }
 
-    //6. 타 유저 서제 목록 조회
+    //6. 타 유저 서재 목록 조회
+    public UserLibraryResponse getUserLibrary(Long userId, ReadingStatus status, Long cursor, int limit) {
+        Member member = getMember(userId);
+
+        // 비공개 서재면 빈 응답 반환
+        if (member.getLibraryVisibility() == LibraryVisibility.PRIVATE) {
+            return UserLibraryResponse.ofPrivate();
+        }
+
+        List<LibraryBook> books = libraryRepository.findUserLibrary(member, status, cursor, PageRequest.of(0, limit + 1));
+        List<LibraryBookSummaryResponse> content = books.stream().map(LibraryBookSummaryResponse::of).toList();
+        return UserLibraryResponse.of(content, limit);
+    }
 
     //헬퍼 메소드
     //멤버 찾기
