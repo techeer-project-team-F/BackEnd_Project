@@ -1,9 +1,11 @@
 package com.shelfeed.backend.domain.library.controller;
 
 import com.shelfeed.backend.domain.library.dto.request.LibraryBookAddRequest;
+import com.shelfeed.backend.domain.library.dto.request.LibraryStatusUpdateRequest;
 import com.shelfeed.backend.domain.library.dto.respond.LibraryBookAddResponse;
 import com.shelfeed.backend.domain.library.dto.respond.LibraryBookDetailResponse;
 import com.shelfeed.backend.domain.library.dto.respond.LibraryListResponse;
+import com.shelfeed.backend.domain.library.dto.respond.LibraryStatusUpdateResponse;
 import com.shelfeed.backend.domain.library.enums.ReadingStatus;
 import com.shelfeed.backend.domain.library.service.LibraryService;
 import com.shelfeed.backend.global.common.response.ApiResponse;
@@ -51,6 +53,14 @@ public class LibraryController {
     }
 
     //4. 독서 상태 변경 PATCH /api/v1/library/{libraryBookId}/status
+    @PatchMapping("/library/{libraryBookId}/status")
+    public ApiResponse<LibraryStatusUpdateResponse> updateStatus(
+            @PathVariable Long libraryBookId,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Valid @RequestBody LibraryStatusUpdateRequest request){
+        Long memberUserId = userDetails.getMember().getMemberUserId();
+        return ApiResponse.success(200,"독서 상태가 변경되었습니다.", libraryService.updateStatus(libraryBookId,memberUserId,request));
+    }
 
     //5. 서제에서 도서 제거 DELETE /api/v1/library/{libraryBookId}
 

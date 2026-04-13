@@ -3,10 +3,8 @@ package com.shelfeed.backend.domain.library.service;
 import com.shelfeed.backend.domain.book.entity.Book;
 import com.shelfeed.backend.domain.book.repository.BookRepository;
 import com.shelfeed.backend.domain.library.dto.request.LibraryBookAddRequest;
-import com.shelfeed.backend.domain.library.dto.respond.LibraryBookAddResponse;
-import com.shelfeed.backend.domain.library.dto.respond.LibraryBookDetailResponse;
-import com.shelfeed.backend.domain.library.dto.respond.LibraryBookSummaryResponse;
-import com.shelfeed.backend.domain.library.dto.respond.LibraryListResponse;
+import com.shelfeed.backend.domain.library.dto.request.LibraryStatusUpdateRequest;
+import com.shelfeed.backend.domain.library.dto.respond.*;
 import com.shelfeed.backend.domain.library.entity.LibraryBook;
 import com.shelfeed.backend.domain.library.enums.ReadingStatus;
 import com.shelfeed.backend.domain.library.repository.LibraryRepository;
@@ -65,6 +63,16 @@ public class LibraryService {
     }
 
     //4. 독서 상태 변경
+    @Transactional
+    public LibraryStatusUpdateResponse updateStatus(Long libraryBookId, Long memberUserId, LibraryStatusUpdateRequest request){
+        Member member = getMember(memberUserId);
+        LibraryBook libraryBook = libraryRepository.findByLibraryBookIdAndMemberId(libraryBookId,member)
+                .orElseThrow(()->new BusinessException(ErrorCode.LIBRARY_BOOK_NOT_FOUND));
+
+        libraryBook.updateStatus(request.getStatus());
+
+        return LibraryStatusUpdateResponse.of(libraryBook);
+    }
 
     //5. 서제에서 도서 제거
 
