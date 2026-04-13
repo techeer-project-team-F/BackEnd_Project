@@ -33,4 +33,55 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     List<Review> findUserReviews(@Param("member") Member member, @Param("cursor") Long cursor,
                                  Pageable pageable);
     Optional<Review> findByReviewIdAndIsDeletedFalse(Long reviewId);
+
+    //최신순(커서 기반)
+    @Query("""
+        SELECT r from Review r WHERE r.book.bookId = :bookId
+        AND r.isDeleted = false
+        AND r.reviewVisibility = 'PUBLIC'
+        AND r.reviewStatus = 'PUBLISHED'
+        AND(:cursor IS NULL OR r.reviewId < :cursor)
+        ORDER BY r.reviewId DESC
+""")
+    List<Review> findBookReviewsLatest(@Param("bookId") Long bookId,
+                                       @Param("cursor") Long cursor,
+                                       Pageable pageable);
+
+    //인기순(커서 기반)
+    @Query("""
+        SELECT r from Review r WHERE r.book.bookId = :bookId
+        AND r.isDeleted = false
+        AND r.reviewVisibility = 'PUBLIC'
+        AND r.reviewStatus = 'PUBLISHED'
+        AND(:cursor IS NULL OR r.likeCount < :cursor)
+        ORDER BY r.likeCount DESC
+""")
+    List<Review> findBookReviewsPopular(@Param("bookId") Long bookId,
+                                       @Param("cursor") Long cursor,
+                                       Pageable pageable);
+
+
+
+    //평점이 높은 순(Offset 기반 페이징) 겹치는 값이 많기도하고 유저들이 평점 낮은 거 까지 볼까?
+    @Query("""
+        SELECT r from Review r WHERE r.book.bookId = :bookId
+        AND r.isDeleted = false
+        AND r.reviewVisibility = 'PUBLIC'
+        AND r.reviewStatus = 'PUBLISHED'
+        ORDER BY r.rating DESC, r.reviewId DESC
+""")
+    List<Review> findBookReviewsRatingHigh(@Param("bookId") Long bookId,
+                                       Pageable pageable);
+
+    //평점이 낮은 순(Offset 기반 페이징) 겹치는 값이 많기도하고 유저들이 평점 낮은 거 까지 볼까?
+    @Query("""
+        SELECT r from Review r WHERE r.book.bookId = :bookId
+        AND r.isDeleted = false
+        AND r.reviewVisibility = 'PUBLIC'
+        AND r.reviewStatus = 'PUBLISHED'
+        ORDER BY r.rating ASC, r.reviewId DESC
+""")
+    List<Review> findBookReviewsRatingLow(@Param("bookId") Long bookId,
+                                       Pageable pageable);
+
 }

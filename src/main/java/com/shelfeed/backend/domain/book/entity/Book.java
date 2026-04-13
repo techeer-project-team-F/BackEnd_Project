@@ -46,4 +46,20 @@ public class Book extends BaseTimeEntity {
     @Column(length = 100)
     private String category;
 
+    public static Book create(String isbn13, String title, String author, String publisher,
+                              String coverImageUrl, String description, Integer totalPages,
+                              LocalDate publishedDate, String aladinItemId, String category) {
+        Book book = new Book();
+        book.isbn13 = isbn13;
+        book.title = title;
+        book.author = author;
+        book.publisher = publisher;
+        book.coverImageUrl = coverImageUrl;
+        book.description = description;
+        book.totalPages = totalPages;
+        book.publishedDate = publishedDate;
+        book.aladinItemId = aladinItemId;
+        book.category = category;
+        return book;
+    }
 }
