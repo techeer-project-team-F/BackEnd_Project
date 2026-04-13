@@ -2,6 +2,8 @@ package com.shelfeed.backend.domain.library.controller;
 
 import com.shelfeed.backend.domain.library.dto.request.LibraryBookAddRequest;
 import com.shelfeed.backend.domain.library.dto.respond.LibraryBookAddResponse;
+import com.shelfeed.backend.domain.library.dto.respond.LibraryListResponse;
+import com.shelfeed.backend.domain.library.enums.ReadingStatus;
 import com.shelfeed.backend.domain.library.service.LibraryService;
 import com.shelfeed.backend.global.common.response.ApiResponse;
 import com.shelfeed.backend.global.security.CustomUserDetails;
@@ -28,6 +30,15 @@ public class LibraryController {
         return ApiResponse.success(201,  "도서가 서재에 추가되었습니다.", libraryService.addBook(memberUserId,request));
     }
     //2. 내 서제 목록 조회 GET /api/v1/library/me
+    @GetMapping("/library/me")
+    public ApiResponse<LibraryListResponse> getMyLibrary(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam(required = false) ReadingStatus status,
+            @RequestParam(required = false) Long cursor,
+            @RequestParam(defaultValue = "20") int limit) {
+        Long memberUserId = userDetails.getMember().getMemberUserId();
+        return ApiResponse.success(200,libraryService.getMyLibrary(memberUserId,status,cursor,limit));
+    }
 
     //3. 서제 도서 상세조회 GET /api/v1/library/{libraryBookId}
 

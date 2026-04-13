@@ -4,7 +4,10 @@ import com.shelfeed.backend.domain.book.entity.Book;
 import com.shelfeed.backend.domain.book.repository.BookRepository;
 import com.shelfeed.backend.domain.library.dto.request.LibraryBookAddRequest;
 import com.shelfeed.backend.domain.library.dto.respond.LibraryBookAddResponse;
+import com.shelfeed.backend.domain.library.dto.respond.LibraryBookSummaryResponse;
+import com.shelfeed.backend.domain.library.dto.respond.LibraryListResponse;
 import com.shelfeed.backend.domain.library.entity.LibraryBook;
+import com.shelfeed.backend.domain.library.enums.ReadingStatus;
 import com.shelfeed.backend.domain.library.repository.LibraryRepository;
 import com.shelfeed.backend.domain.member.entity.Member;
 import com.shelfeed.backend.domain.member.repository.MemberRepository;
@@ -12,8 +15,11 @@ import com.shelfeed.backend.domain.review.repository.ReviewRepository;
 import com.shelfeed.backend.global.common.exception.BusinessException;
 import com.shelfeed.backend.global.common.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -36,10 +42,18 @@ public class LibraryService {
         LibraryBook libraryBook = LibraryBook.create(member, book, request.getStatus());
         libraryRepository.save(libraryBook);
         return LibraryBookAddResponse.of(libraryBook);
-
     }
 
     //2. 내 서제 목록 조회
+    public LibraryListResponse getMyLibrary(Long memberUserId, ReadingStatus status, Long cursor, int limit){
+        Member member = getMember(memberUserId);
+        //Id 기반 페이지 네이션
+        List<LibraryBook> books = libraryRepository.findMyLibrary(member,status,cursor, PageRequest.of(0,limit + 1));
+
+        List<LibraryBookSummaryResponse> content = books.stream().map(LibraryBookSummaryResponse::of).toList();
+
+        return  LibraryListResponse.of(content,limit);
+    }
 
     //3. 서제 도서 상세조회
 
