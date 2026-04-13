@@ -4,6 +4,7 @@ import com.shelfeed.backend.domain.book.entity.Book;
 import com.shelfeed.backend.domain.book.repository.BookRepository;
 import com.shelfeed.backend.domain.library.dto.request.LibraryBookAddRequest;
 import com.shelfeed.backend.domain.library.dto.respond.LibraryBookAddResponse;
+import com.shelfeed.backend.domain.library.dto.respond.LibraryBookDetailResponse;
 import com.shelfeed.backend.domain.library.dto.respond.LibraryBookSummaryResponse;
 import com.shelfeed.backend.domain.library.dto.respond.LibraryListResponse;
 import com.shelfeed.backend.domain.library.entity.LibraryBook;
@@ -56,6 +57,12 @@ public class LibraryService {
     }
 
     //3. 서제 도서 상세조회
+    public LibraryBookDetailResponse getLibraryBookDetail(Long libraryBookId, Long memberUserId){
+        Member member = getMember(memberUserId);
+        LibraryBook libraryBook = libraryRepository.findByLibraryBookIdAndMemberId(libraryBookId,member)
+                .orElseThrow(()->new BusinessException(ErrorCode.LIBRARY_BOOK_NOT_FOUND));
+        return LibraryBookDetailResponse.of(libraryBook);
+    }
 
     //4. 독서 상태 변경
 

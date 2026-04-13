@@ -2,6 +2,7 @@ package com.shelfeed.backend.domain.library.controller;
 
 import com.shelfeed.backend.domain.library.dto.request.LibraryBookAddRequest;
 import com.shelfeed.backend.domain.library.dto.respond.LibraryBookAddResponse;
+import com.shelfeed.backend.domain.library.dto.respond.LibraryBookDetailResponse;
 import com.shelfeed.backend.domain.library.dto.respond.LibraryListResponse;
 import com.shelfeed.backend.domain.library.enums.ReadingStatus;
 import com.shelfeed.backend.domain.library.service.LibraryService;
@@ -41,6 +42,13 @@ public class LibraryController {
     }
 
     //3. 서제 도서 상세조회 GET /api/v1/library/{libraryBookId}
+    @GetMapping("/library/{libraryBookId}")
+    public ApiResponse<LibraryBookDetailResponse> getLibraryBookDetail(
+            @PathVariable Long libraryBookId,
+            @AuthenticationPrincipal CustomUserDetails userDetails){
+        Long memberUserId = userDetails.getMember().getMemberUserId();
+        return ApiResponse.success(200, libraryService.getLibraryBookDetail(libraryBookId,memberUserId));
+    }
 
     //4. 독서 상태 변경 PATCH /api/v1/library/{libraryBookId}/status
 
