@@ -34,6 +34,8 @@ public interface LibraryRepository extends JpaRepository<LibraryBook,Long> {
     List<LibraryBook> findUserLibrary(@Param("member") Member member, @Param("status") ReadingStatus status,
                                       @Param("cursor") Long cursor,
                                       Pageable pageable);
+    Optional<LibraryBook> findByMemberIdAndBook_BookId(Member member,Long bookId);
+
 
 }
 
