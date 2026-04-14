@@ -7,6 +7,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.net.URI;
+
 @Component//동기
 @RequiredArgsConstructor
 public class AladinApiClient {
@@ -23,7 +25,7 @@ public class AladinApiClient {
 
     //도서검색
     public AladinSearchResponse search(String query, int start, int maxResults){
-        String url = UriComponentsBuilder.fromHttpUrl(SEARCH_URL) //uri 변경
+        URI uri = UriComponentsBuilder.fromHttpUrl(SEARCH_URL) //uri 변경
                 .queryParam("ttbkey", ttbKey) //인증키
                 .queryParam("Query", query) //검색어
                 .queryParam("QueryType", "Keyword") //키워드
@@ -32,21 +34,24 @@ public class AladinApiClient {
                 .queryParam("SearchTarget", "Book")// 단행본 한정
                 .queryParam("output", "js")// JSON요청
                 .queryParam("Version", version) //사용할 외부 API 버전
-                .toUriString();
-        return restTemplate.getForObject(url, AladinSearchResponse.class);
+                .encode() // 한 번만 인코딩 (이중 인코딩 방지)
+                .build()
+                .toUri();
+        return restTemplate.getForObject(uri, AladinSearchResponse.class);
     }
     // ISBN으로 도서 조회
     public AladinSearchResponse lookupByIsbn(String isbn13) {
-        String url = UriComponentsBuilder.fromHttpUrl(LOOKUP_URL) //uri 변경
+        URI uri = UriComponentsBuilder.fromHttpUrl(LOOKUP_URL) //uri 변경
                 .queryParam("ttbkey", ttbKey) //인증키
                 .queryParam("itemIdType", "ISBN13")// 조회할 식별자 종류
                 .queryParam("ItemId", isbn13)//실제 식별자 값
                 .queryParam("output", "js")// JSON요청
                 .queryParam("Version", version) //사용할 외부 API 버전
                 .queryParam("OptResult", "packing")// 부가정보
-                .toUriString();
-
-        return restTemplate.getForObject(url, AladinSearchResponse.class);
+                .encode() // 한 번만 인코딩 (이중 인코딩 방지)
+                .build()
+                .toUri();
+        return restTemplate.getForObject(uri, AladinSearchResponse.class);
     }
 
 
