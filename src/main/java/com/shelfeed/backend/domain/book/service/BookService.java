@@ -3,10 +3,9 @@ package com.shelfeed.backend.domain.book.service;
 import com.shelfeed.backend.domain.book.client.AladinApiClient;
 import com.shelfeed.backend.domain.book.client.dto.AladinItem;
 import com.shelfeed.backend.domain.book.client.dto.AladinSearchResponse;
+import com.shelfeed.backend.domain.book.dto.request.BookReviewSearchRequest;
 import com.shelfeed.backend.domain.book.dto.request.BookSearchRequest;
-import com.shelfeed.backend.domain.book.dto.respond.BookDetailResponse;
-import com.shelfeed.backend.domain.book.dto.respond.BookSearchListResponse;
-import com.shelfeed.backend.domain.book.dto.respond.BookSummaryResponse;
+import com.shelfeed.backend.domain.book.dto.respond.*;
 import com.shelfeed.backend.domain.book.entity.Book;
 import com.shelfeed.backend.domain.book.repository.BookRepository;
 import com.shelfeed.backend.domain.library.entity.LibraryBook;
@@ -20,6 +19,8 @@ import com.shelfeed.backend.domain.review.repository.ReviewRepository;
 import com.shelfeed.backend.global.common.exception.BusinessException;
 import com.shelfeed.backend.global.common.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -110,7 +111,25 @@ public class BookService {
     }
 
     // 4. 도서별 감상 목록
+    public BookReviewListResponse getBookReviews(Long bookId, BookReviewSearchRequest request, Long memberUserId){
+        if (!bookRepository.existsById(bookId)){
+            throw new BusinessException(ErrorCode.BOOK_NOT_FOUND);
+        }
+        int pageSize = request.getLimit() + 1;
+        List<Review> reviews = switch (request.getSort()){//필터링
+            case "popular" -> reviewRepository.findBookReviewsPopular(bookId, request.getCursor(), PageRequest.of(0,pageSize));
+            case "rating_high" -> reviewRepository.findBookReviewsRatingHigh(bookId, PageRequest.of(0, pageSize));
+            case "rating_low"  -> reviewRepository.findBookReviewsRatingLow(bookId, PageRequest.of(0, pageSize));
+            default -> reviewRepository.findBookReviewsLatest(
+                    bookId, request.getCursor(), PageRequest.of(0, pageSize));
+        };
+        List<BookReviewResponse> content = reviews.stream().map(review -> {
+                    boolean isLiked = memberUserId != null && reviewLikeRepository.existsByReview_ReviewIdAndMember_MemberUserId(review.getReviewId(), memberUserId);
+                    return BookReviewResponse.of(review, isLiked);
+                }).toList();
 
+        return BookReviewListResponse.of(content, request.getLimit());
+    }
 
     // 알라딘 아이템 → DB Book (없으면 저장)
     private Book findOrCreateBook(AladinItem item) {
@@ -142,6 +161,4 @@ public class BookService {
     private Member getMemberOrNull(Long memberUserId) {
         return memberRepository.findByMemberUserId(memberUserId).orElse(null);
     }
-
-
 }
