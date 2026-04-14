@@ -27,7 +27,7 @@ public class ReplyResponse {
         private String profileImageUrl;
     }
 
-    public static ReplyResponse of(Comment comment, boolean isMine) {
+    public static ReplyResponse of(Comment comment, boolean isMine, boolean isLiked) {
         boolean deleted = comment.isDeleted();
 
         return ReplyResponse.builder()
@@ -40,7 +40,7 @@ public class ReplyResponse {
                 .content(deleted ? "삭제된 댓글입니다" : comment.getContent())
                 .parentCommentId(comment.getParentComment().getCommentId())
                 .likeCount(comment.getLikeCount())
-                .isLiked(false)     //CommentLikeRepository 연결 후 적용
+                .isLiked(isLiked)
                 .isDeleted(deleted)
                 .isMine(isMine)
                 .createdAt(comment.getCreatedAt())

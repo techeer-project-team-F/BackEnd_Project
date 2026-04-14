@@ -146,9 +146,14 @@ public class ReviewService {
         return reviews.stream().map(review -> ReviewSummaryResponse.of(review, getTagNames(review))).toList();
     }
     //7. 감상 좋아요
+    @Transactional
     public ReviewLikeResponse likeReview(Long reviewId, Long memberUserId){
         Review review = getReviewOrThrow(reviewId);
         Member member = getMember(memberUserId);
+        // 셀프 좋아요 막기(나중에 상황봐서 빼도 됨)
+        if (review.getMember().getMemberUserId().equals(memberUserId)){
+            throw new BusinessException(ErrorCode.SELF_LIKE_NOT_ALLOWED);
+        }
         //감상 아이디랑 멤버아이디 있으면 중복 방지
         if (reviewLikeRepository.existsByReview_ReviewIdAndMember_MemberUserId(reviewId,memberUserId)){
             throw new BusinessException(ErrorCode.ALREADY_REVIEW_LIKED);
@@ -158,13 +163,14 @@ public class ReviewService {
         return ReviewLikeResponse.of(review);
     }
     //8. 감상 좋아요 취소
+    @Transactional
     public ReviewLikeResponse unlikeReview(Long reviewId, Long memberUserId){
         Review review = getReviewOrThrow(reviewId);
         ReviewLike like = reviewLikeRepository.findByReview_ReviewIdAndMember_MemberUserId(reviewId, memberUserId)
                 .orElseThrow(()-> new BusinessException(ErrorCode.REVIEW_LIKE_NOT_FOUND));// 좋아요 확인
 
         reviewLikeRepository.delete(like);
-        review.decreaseCommentCount();
+        review.decreaseLikeCount();
         return ReviewLikeResponse.of(review);
     }
 

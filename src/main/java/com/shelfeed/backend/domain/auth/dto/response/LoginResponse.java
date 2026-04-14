@@ -18,6 +18,7 @@ public class LoginResponse {
         private String email;
         private String nickname;
         private String profileImageUrl;
+        private String bio;
         private boolean emailVerified;
         private boolean onboardingCompleted;
     }
@@ -31,6 +32,7 @@ public class LoginResponse {
                         .email(member.getEmail())
                         .nickname(member.getNickname())
                         .profileImageUrl(member.getProfileImageUrl())
+                        .bio(member.getBio())
                         .emailVerified(member.isEmailVerified())
                         .onboardingCompleted(member.isOnboardingCompleted())
                         .build())
