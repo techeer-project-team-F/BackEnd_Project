@@ -42,4 +42,11 @@ public class ReviewLike {
         return reviewLike;
     }
 
+    public static ReviewLike create(Review review, Member member) {
+        ReviewLike like = new ReviewLike();
+        like.review = review;
+        like.member = member;
+        return like;
+    }
+
 }

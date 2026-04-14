@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -59,8 +60,10 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(PUBLIC_URLS).permitAll()
+                        .requestMatchers(PUBLIC_URLS).permitAll() //permitAll : 무조건 통과
                         .anyRequest().authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/reviews/{reviewId}").permitAll()//requestMatchers : 보안 규칙 적용 대상 지정
+                        .requestMatchers(HttpMethod.GET, "/api/v1/members/{userId}/reviews").permitAll()//requestMatchers : 조건에 맞는 요청
                 ).addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
