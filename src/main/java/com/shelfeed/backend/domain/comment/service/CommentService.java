@@ -2,6 +2,9 @@ package com.shelfeed.backend.domain.comment.service;
 
 import com.shelfeed.backend.domain.comment.dto.request.CommentCreateRequest;
 import com.shelfeed.backend.domain.comment.dto.response.CommentCreateResponse;
+import com.shelfeed.backend.domain.comment.dto.response.CommentListResponse;
+import com.shelfeed.backend.domain.comment.dto.response.CommentResponse;
+import com.shelfeed.backend.domain.comment.dto.response.ReplyResponse;
 import com.shelfeed.backend.domain.comment.entity.Comment;
 import com.shelfeed.backend.domain.comment.repository.CommentLikeRepository;
 import com.shelfeed.backend.domain.comment.repository.CommentRepository;
@@ -12,8 +15,14 @@ import com.shelfeed.backend.domain.review.repository.ReviewRepository;
 import com.shelfeed.backend.global.common.exception.BusinessException;
 import com.shelfeed.backend.global.common.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+import static com.shelfeed.backend.domain.comment.entity.QComment.comment;
 
 @Service
 @RequiredArgsConstructor
@@ -46,6 +55,29 @@ public class CommentService {
         return CommentCreateResponse.of(comment);
     }
 
+    //2. 댓글 조회
+    public CommentListResponse getComments(Long reviewId, Long cursor, int limit, Long memberUserId){
+        Review review = getReview(reviewId);
+
+        List<Comment> parentComments = commentRepository.findParentComments(review,cursor, PageRequest.of(0, limit + 1));
+
+        List<CommentResponse> content = parentComments.stream().map(comment ->{
+                    //로그인 한 사람인가
+                    boolean isMine = memberUserId != null && comment.getMember().getMemberUserId().equals(memberUserId);
+                    //좋아요 누른 사람인가
+                    boolean isLiked = memberUserId != null && commentLikeRepository.existsByComment_CommentIdAndMember_MemberUserId(comment.getCommentId(),memberUserId);
+
+                    List<ReplyResponse> replies = commentRepository.findByParentComment(comment).stream().map(reply -> {
+                        //로그인 한 유저 그리고 답글의 유저가 기존 멤버인가
+                        boolean replyIsMine = memberUserId != null && reply.getMember().getMemberUserId().equals(memberUserId);
+                        // 로그인 한 유저 그리고 좋아요를 눌렀는가
+                        boolean replyIsLiked = memberUserId != null && commentLikeRepository.existsByComment_CommentIdAndMember_MemberUserId(reply.getCommentId(),memberUserId);
+                        return ReplyResponse.of(reply,replyIsMine,replyIsLiked);
+                }).toList();
+                    return CommentResponse.of(comment,isMine,isLiked,replies);
+        }).toList();
+        return CommentListResponse.of(content,limit);
+    }
 
     //추가 메서드
     private Member getMember(Long memberUserId) {
