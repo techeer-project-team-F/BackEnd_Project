@@ -87,8 +87,28 @@ public class BookService {
         return BookDetailResponse.of(book,averageRating,reviewCount,myLibraryStatus,myReviewId);
     }
 
-
     // 3. ISBN 조회
+    @Transactional
+    public BookDetailResponse getBookByIsbn(String isbn13, Long memberUserId) {
+        Optional<Book> existing = bookRepository.findByIsbn13(isbn13);
+        Book book = existing.orElseGet(() -> {
+            AladinSearchResponse response = aladinApiClient.lookupByIsbn(isbn13);
+            if (response == null || response.getItems() == null || response.getItems().isEmpty()) {
+                throw new BusinessException(ErrorCode.BOOK_NOT_FOUND);
+            }
+            return findOrCreateBook(response.getItems().get(0));
+        });
+
+        boolean inMyLibrary = false;
+        if (memberUserId != null) {
+            Member member = getMemberOrNull(memberUserId);
+            if (member != null) {
+                inMyLibrary = libraryRepository.existsByMemberIdAndBook_BookId(member, book.getBookId());
+            }
+        }
+        return BookDetailResponse.ofIsbn(book, inMyLibrary);
+    }
+
     // 4. 도서별 감상 목록
 
 

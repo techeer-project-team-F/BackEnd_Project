@@ -33,4 +33,13 @@ public class BookController {
         Long memberUserId = userDetails != null ? userDetails.getMember().getMemberUserId() : null;
         return ApiResponse.success(200, bookService.getBook(bookId,memberUserId));
     }
+
+    // 3. ISBN 조회  GET /api/v1/books/isbn/{isbn13}
+    @GetMapping("/isbn/{isbn13}")
+    public ApiResponse<BookDetailResponse> getBookByIsbn(
+            @PathVariable String isbn13,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Long memberUserId = userDetails != null ? userDetails.getMember().getMemberUserId() : null;
+        return ApiResponse.success(200, bookService.getBookByIsbn(isbn13, memberUserId));
+    }
 }
