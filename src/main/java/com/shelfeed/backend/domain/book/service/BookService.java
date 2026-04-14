@@ -4,21 +4,28 @@ import com.shelfeed.backend.domain.book.client.AladinApiClient;
 import com.shelfeed.backend.domain.book.client.dto.AladinItem;
 import com.shelfeed.backend.domain.book.client.dto.AladinSearchResponse;
 import com.shelfeed.backend.domain.book.dto.request.BookSearchRequest;
+import com.shelfeed.backend.domain.book.dto.respond.BookDetailResponse;
 import com.shelfeed.backend.domain.book.dto.respond.BookSearchListResponse;
 import com.shelfeed.backend.domain.book.dto.respond.BookSummaryResponse;
 import com.shelfeed.backend.domain.book.entity.Book;
 import com.shelfeed.backend.domain.book.repository.BookRepository;
+import com.shelfeed.backend.domain.library.entity.LibraryBook;
+import com.shelfeed.backend.domain.library.enums.ReadingStatus;
 import com.shelfeed.backend.domain.library.repository.LibraryRepository;
 import com.shelfeed.backend.domain.member.entity.Member;
 import com.shelfeed.backend.domain.member.repository.MemberRepository;
+import com.shelfeed.backend.domain.review.entity.Review;
 import com.shelfeed.backend.domain.review.repository.ReviewLikeRepository;
 import com.shelfeed.backend.domain.review.repository.ReviewRepository;
+import com.shelfeed.backend.global.common.exception.BusinessException;
+import com.shelfeed.backend.global.common.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -54,12 +61,33 @@ public class BookService {
     }
 
 
-
-
-
-
-
     // 2. 도서 상세 조회
+    public BookDetailResponse getBook(Long bookId, Long memberUserId) {
+        //책 없으면 예외
+        Book book = bookRepository.findById(bookId).orElseThrow(()->new BusinessException(ErrorCode.BOOK_NOT_FOUND));
+        Double averageRating = bookRepository.findAverageRatingByBookId(bookId);//평균 별점
+        Long reviewCount = bookRepository.countReviewsByBookId(bookId);//리뷰 카운트
+        ReadingStatus myLibraryStatus = null;
+        Long myReviewId = null;
+
+        if (memberUserId != null){Member member = getMemberOrNull(memberUserId);//멤버 있으면 넣고 없으면 null
+            if (member != null){
+
+                Optional<LibraryBook> libraryBook = libraryRepository.findByMemberIdAndBook_BookId(member,bookId);
+                if (libraryBook.isPresent()){//isPresent : Optional에 데이터가 있으면 true 없으면 false
+                    myLibraryStatus = libraryBook.get().getStatus();
+                    }
+
+                Optional<Review> myReview = reviewRepository.findByMemberAndBook_BookIdAndIsDeletedFalse(member,bookId);
+                if (myReview.isPresent()){
+                    myReviewId = myReview.get().getReviewId();
+                }
+            }
+        }
+        return BookDetailResponse.of(book,averageRating,reviewCount,myLibraryStatus,myReviewId);
+    }
+
+
     // 3. ISBN 조회
     // 4. 도서별 감상 목록
 
