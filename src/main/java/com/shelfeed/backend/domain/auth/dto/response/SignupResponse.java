@@ -18,6 +18,7 @@ public class SignupResponse {
         private Long userId;
         private String email;
         private String nickname;
+        private String bio;
         private boolean emailVerified;
     }
 
@@ -29,6 +30,7 @@ public class SignupResponse {
                         .userId(member.getMemberUserId())
                         .email(member.getEmail())
                         .nickname(member.getNickname())
+                        .bio(member.getBio())
                         .emailVerified(member.isEmailVerified())
                         .build())
                 .build();

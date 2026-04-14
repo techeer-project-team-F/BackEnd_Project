@@ -52,7 +52,7 @@ public class AuthService {
 
         Long memberUserId = redisService.generateMemberUserId(); //중복되지 않게 redis에서 부여한 ID
 
-        Member member = Member.createLocal(memberUserId, request.getEmail(), passwordEncoder.encode(request.getPassword()), request.getNickname());
+        Member member = Member.createLocal(memberUserId, request.getEmail(), passwordEncoder.encode(request.getPassword()), request.getNickname(), request.getBio());
 
         memberRepository.save(member); // 저장
 

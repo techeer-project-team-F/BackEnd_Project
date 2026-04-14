@@ -73,12 +73,13 @@ public class Member extends BaseTimeEntity {
     private LocalDateTime withdrawnAt;
 
     // 계정 생성하고 수정 안되는 것들
-    public static Member createLocal(Long memberUserId, String email, String encodedPassword, String nickname) {
+    public static Member createLocal(Long memberUserId, String email, String encodedPassword, String nickname, String bio) {
         Member member = new Member();
         member.memberUserId = memberUserId;
         member.email = email;
         member.password = encodedPassword;
         member.nickname = nickname;
+        member.bio = bio;
         member.emailVerified = false;
         member.onboardingCompleted = false;
         return member;
