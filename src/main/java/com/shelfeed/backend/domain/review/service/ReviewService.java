@@ -8,13 +8,12 @@ import com.shelfeed.backend.domain.member.entity.Member;
 import com.shelfeed.backend.domain.member.repository.MemberRepository;
 import com.shelfeed.backend.domain.review.dto.request.ReviewCreateRequest;
 import com.shelfeed.backend.domain.review.dto.request.ReviewUpdateRequest;
-import com.shelfeed.backend.domain.review.dto.response.ReviewCreateResponse;
-import com.shelfeed.backend.domain.review.dto.response.ReviewDetailResponse;
-import com.shelfeed.backend.domain.review.dto.response.ReviewSummaryResponse;
-import com.shelfeed.backend.domain.review.dto.response.ReviewUpdateResponse;
+import com.shelfeed.backend.domain.review.dto.response.*;
 import com.shelfeed.backend.domain.review.entity.Review;
+import com.shelfeed.backend.domain.review.entity.ReviewLike;
 import com.shelfeed.backend.domain.review.entity.ReviewTag;
 import com.shelfeed.backend.domain.review.enums.ReviewStatus;
+import com.shelfeed.backend.domain.review.repository.ReviewLikeRepository;
 import com.shelfeed.backend.domain.review.repository.ReviewRepository;
 import com.shelfeed.backend.domain.review.repository.ReviewTagRepository;
 import com.shelfeed.backend.domain.review.repository.TagRepository;
@@ -28,7 +27,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -39,6 +37,7 @@ public class ReviewService {
     private final BookRepository bookRepository;
     private final TagRepository tagRepository;
     private final ReviewTagRepository reviewTagRepository;
+    private final ReviewLikeRepository reviewLikeRepository;
 
     // ── 1 감상 작성
     @Transactional
@@ -146,9 +145,28 @@ public class ReviewService {
 
         return reviews.stream().map(review -> ReviewSummaryResponse.of(review, getTagNames(review))).toList();
     }
+    //7. 감상 좋아요
+    public ReviewLikeResponse likeReview(Long reviewId, Long memberUserId){
+        Review review = getReviewOrThrow(reviewId);
+        Member member = getMember(memberUserId);
+        //감상 아이디랑 멤버아이디 있으면 중복 방지
+        if (reviewLikeRepository.existsByReview_ReviewIdAndMember_MemberUserId(reviewId,memberUserId)){
+            throw new BusinessException(ErrorCode.ALREADY_REVIEW_LIKED);
+        }
+        reviewLikeRepository.save(ReviewLike.create(review,member));// 저장
+        review.increaseLikeCount();
+        return ReviewLikeResponse.of(review);
+    }
+    //8. 감상 좋아요 취소
+    public ReviewLikeResponse unlikeReview(Long reviewId, Long memberUserId){
+        Review review = getReviewOrThrow(reviewId);
+        ReviewLike like = reviewLikeRepository.findByReview_ReviewIdAndMember_MemberUserId(reviewId, memberUserId)
+                .orElseThrow(()-> new BusinessException(ErrorCode.REVIEW_LIKE_NOT_FOUND));// 좋아요 확인
 
-
-
+        reviewLikeRepository.delete(like);
+        review.decreaseCommentCount();
+        return ReviewLikeResponse.of(review);
+    }
 
     //헬퍼 메소드
     private Member getMember(Long memberUserId) {
@@ -168,6 +186,7 @@ public class ReviewService {
             return name;
         }).toList();
     }
+    //삭제안된 리뷰 찾기
     private Review getReviewOrThrow(Long reviewId) {
         return reviewRepository.findByReviewIdAndIsDeletedFalse(reviewId).orElseThrow(()-> new BusinessException(ErrorCode.REVIEW_NOT_FOUND));
     }
@@ -176,6 +195,5 @@ public class ReviewService {
         return reviewTagRepository.findByReview(review).stream()
                 .map(reviewTag -> reviewTag.getTag().getTagName()).toList();
     }
-
 }
 
