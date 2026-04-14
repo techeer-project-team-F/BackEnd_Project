@@ -30,7 +30,7 @@ public class CommentResponse {
         private String profileImageUrl;
     }
 
-    public static CommentResponse of(Comment comment, boolean isMine, List<ReplyResponse> replies) {
+    public static CommentResponse of(Comment comment, boolean isMine,boolean isLiked ,List<ReplyResponse> replies) {
         boolean deleted = comment.isDeleted();
 
         return CommentResponse.builder()
@@ -44,7 +44,7 @@ public class CommentResponse {
                 .parentCommentId(comment.getParentComment() != null
                         ? comment.getParentComment().getCommentId() : null)
                 .likeCount(comment.getLikeCount())
-                .isLiked(false)     //CommentLikeRepository 연결 후 적용
+                .isLiked(isLiked)     //CommentLikeRepository 연결 후 적용
                 .isDeleted(deleted)
                 .isMine(isMine)
                 .createdAt(comment.getCreatedAt())

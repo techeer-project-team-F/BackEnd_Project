@@ -2,10 +2,7 @@ package com.shelfeed.backend.domain.review.controller;
 
 import com.shelfeed.backend.domain.review.dto.request.ReviewCreateRequest;
 import com.shelfeed.backend.domain.review.dto.request.ReviewUpdateRequest;
-import com.shelfeed.backend.domain.review.dto.response.ReviewCreateResponse;
-import com.shelfeed.backend.domain.review.dto.response.ReviewDetailResponse;
-import com.shelfeed.backend.domain.review.dto.response.ReviewSummaryResponse;
-import com.shelfeed.backend.domain.review.dto.response.ReviewUpdateResponse;
+import com.shelfeed.backend.domain.review.dto.response.*;
 import com.shelfeed.backend.domain.review.enums.ReviewStatus;
 import com.shelfeed.backend.domain.review.service.ReviewService;
 import com.shelfeed.backend.global.common.response.ApiResponse;
@@ -80,5 +77,26 @@ public class ReviewController {
             @RequestParam(required = false) Long cursor,
             @RequestParam(defaultValue = "20") int limit){
         return ApiResponse.success(200, reviewService.getUserReviews(userId,cursor,limit));
+    }
+
+    //7. 감상 좋아요
+    @PostMapping("/reviews/{reviewId}/likes")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ApiResponse<ReviewLikeResponse> likeReview(
+            @PathVariable Long reviewId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Long memberUserId = userDetails.getMember().getMemberUserId();
+        return ApiResponse.success(201, "좋아요를 눌렀습니다.",
+                reviewService.likeReview(reviewId, memberUserId));
+    }
+
+    //8. 감상 좋아요 취소
+    @DeleteMapping("/reviews/{reviewId}/likes")
+    public ApiResponse<ReviewLikeResponse> unlikeReview(
+            @PathVariable Long reviewId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Long memberUserId = userDetails.getMember().getMemberUserId();
+        return ApiResponse.success(200, "좋아요가 취소되었습니다.",
+                reviewService.unlikeReview(reviewId, memberUserId));
     }
 }
