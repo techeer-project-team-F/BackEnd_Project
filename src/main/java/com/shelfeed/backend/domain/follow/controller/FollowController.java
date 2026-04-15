@@ -1,6 +1,7 @@
 package com.shelfeed.backend.domain.follow.controller;
 
 import com.shelfeed.backend.domain.follow.dto.response.FollowResponse;
+import com.shelfeed.backend.domain.follow.dto.response.UnfollowResponse;
 import com.shelfeed.backend.domain.follow.service.FollowService;
 import com.shelfeed.backend.global.common.response.ApiResponse;
 import com.shelfeed.backend.global.security.CustomUserDetails;
@@ -25,5 +26,15 @@ public class FollowController {
         Long memberUserId = userDetails.getMember().getMemberUserId();
         return ApiResponse.success(201, "팔로우했습니다.",
                 followService.follow(userId, memberUserId));
+    }
+
+    // 11.2 언팔로우  DELETE /api/v1/users/{userId}/follow
+    @DeleteMapping("/{userId}/follow")
+    public ApiResponse<UnfollowResponse> unfollow(
+            @PathVariable Long userId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Long memberUserId = userDetails.getMember().getMemberUserId();
+        return ApiResponse.success(200, "언팔로우했습니다.",
+                followService.unfollow(userId, memberUserId));
     }
 }

@@ -2,6 +2,7 @@ package com.shelfeed.backend.domain.follow.service;
 
 import com.shelfeed.backend.domain.feed.repository.FeedRepository;
 import com.shelfeed.backend.domain.follow.dto.response.FollowResponse;
+import com.shelfeed.backend.domain.follow.dto.response.UnfollowResponse;
 import com.shelfeed.backend.domain.follow.entity.Follow;
 import com.shelfeed.backend.domain.follow.repository.FollowRepository;
 import com.shelfeed.backend.domain.member.entity.Member;
@@ -42,6 +43,23 @@ public class FollowService {
         follower.increaseFollowingCount();
         followee.increaseFollowerCount();
         return FollowResponse.of(follow,follower);
+    }
+    //2.언팔로우
+    @Transactional
+    public UnfollowResponse unfollow(Long targetUserId, Long memberUserId){
+        Member follower = getMember(memberUserId);
+        Member followee = getMember(targetUserId);
+        //삭제 대상 조회
+        Follow follow = followRepository.findByFollowerAndFollowee(follower,followee)
+                .orElseThrow(() -> new BusinessException(ErrorCode.FOLLOW_NOT_FOUND));
+        followRepository.delete(follow);
+        // 카운트 업데이트
+        follower.decreaseFollowingCount();
+        followee.decreaseFollowerCount();
+        //엔팔한 멤버의 피드 내 피드화면에서 제거
+        feedRepository.deleteByMemberAndReview_Member(follower,followee);
+
+        return UnfollowResponse.of(followee,follower);
     }
 
 
