@@ -99,10 +99,17 @@ public class Member extends BaseTimeEntity {
     }
 
     // 비즈니스 메서드
-    public void updateProfile(String nickname, String bio, String profileImageUrl, LibraryVisibility libraryVisibility) {
+    // 온보딩 전용: null 포함 값 그대로 설정 (초기 정보 주입)
+    public void onboard(String nickname, String bio, String profileImageUrl) {
         this.nickname = nickname;
         this.bio = bio;
-        this.profileImageUrl = profileImageUrl;
+        if (profileImageUrl != null) this.profileImageUrl = profileImageUrl; // OAuth 기본 이미지 보호
+    }
+    // 프로필 수정 전용: null이면 기존 값 유지 (PATCH 의미)
+    public void updateProfile(String nickname, String bio, String profileImageUrl) {
+        if (nickname != null) this.nickname = nickname;
+        if (bio != null) this.bio = bio;
+        if (profileImageUrl != null) this.profileImageUrl = profileImageUrl;
     }
     public void completeOnboarding() { this.onboardingCompleted = true; }
     public void recordLogin() { this.lastLoginAt = LocalDateTime.now(); }
