@@ -1,8 +1,10 @@
 package com.shelfeed.backend.domain.comment.controller;
 
 import com.shelfeed.backend.domain.comment.dto.request.CommentCreateRequest;
+import com.shelfeed.backend.domain.comment.dto.request.CommentUpdateRequest;
 import com.shelfeed.backend.domain.comment.dto.response.CommentCreateResponse;
 import com.shelfeed.backend.domain.comment.dto.response.CommentListResponse;
+import com.shelfeed.backend.domain.comment.dto.response.CommentUpdateResponse;
 import com.shelfeed.backend.domain.comment.service.CommentService;
 import com.shelfeed.backend.global.common.response.ApiResponse;
 import com.shelfeed.backend.global.security.CustomUserDetails;
@@ -41,5 +43,15 @@ public class CommentController {
         return ApiResponse.success(200,
                 commentService.getComments(reviewId, cursor, limit, memberUserId));
     }
-
+    // 7.3 댓글 수정  PUT /api/v1/reviews/{reviewId}/comments/{commentId}
+    @PutMapping("/{reviewId}/comments/{commentId}")
+    public ApiResponse<CommentUpdateResponse> updateComment(
+            @PathVariable Long reviewId,
+            @PathVariable Long commentId,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Valid @RequestBody CommentUpdateRequest request) {
+        Long memberUserId = userDetails.getMember().getMemberUserId();
+        return ApiResponse.success(200, "댓글이 수정되었습니다.",
+                commentService.updateComment(reviewId, commentId, memberUserId, request));
+    }
 }
