@@ -1,10 +1,12 @@
 package com.shelfeed.backend.domain.book.repository;
 
 import com.shelfeed.backend.domain.book.entity.Book;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface BookRepository extends JpaRepository<Book, Long> {
@@ -22,4 +24,15 @@ SELECT AVG(r.rating) FROM Review r WHERE r.book.bookId = :bookId AND r.isDeleted
             AND r.reviewVisibility = 'PUBLIC' AND r.reviewStatus = 'PUBLISHED'
 """)
     Long countReviewsByBookId(@Param("bookId") Long bookId);
+
+    //도서 검색 쿼리
+    @Query("""
+    SELECT b FROM Book b 
+    WHERE (b.title LIKE %:query% OR b.author LIKE %:query%) 
+    AND (:cursor IS NULL OR b.bookId < :cursor)
+    ORDER BY b.bookId DESC 
+""")// %Like% 이기에 풀스캔을 때리는 상황이 발생해서 나중에 리팩토링 하겠습니다.
+    List<Book> searchBooks(@Param("query") String query,
+                           @Param("cursor") Long cursor,
+                           Pageable pageable);
 }
