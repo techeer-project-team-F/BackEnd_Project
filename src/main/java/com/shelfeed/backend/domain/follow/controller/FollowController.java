@@ -1,6 +1,7 @@
 package com.shelfeed.backend.domain.follow.controller;
 
-import com.shelfeed.backend.domain.block.dto.service.BlockService;
+import com.shelfeed.backend.domain.block.dto.response.BlockListResponse;
+import com.shelfeed.backend.domain.block.service.BlockService;
 import com.shelfeed.backend.domain.follow.dto.response.FollowListResponse;
 import com.shelfeed.backend.domain.follow.dto.response.FollowResponse;
 import com.shelfeed.backend.domain.follow.dto.response.UnfollowResponse;
@@ -78,5 +79,15 @@ public class FollowController {
         Long memberUserId = userDetails.getMember().getMemberUserId();
         blockService.unblock(userId, memberUserId);
         return ApiResponse.success(200,"차단이 해제되었습니다.");
+    }
+
+    @GetMapping("/me/blocks")
+    public ApiResponse<BlockListResponse> getBlockList(
+            @RequestParam(required = false) Long cursor,
+            @RequestParam(defaultValue = "20") int limit,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Long memberUserId = userDetails.getMember().getMemberUserId();
+        return ApiResponse.success(200,
+                blockService.getBlockList(memberUserId, cursor, limit));
     }
 }
