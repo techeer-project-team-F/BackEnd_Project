@@ -66,7 +66,7 @@ public class FollowService {
 
         return UnfollowResponse.of(followee,follower);
     }
-    //팔로워 목록
+    //3.팔로워 목록
     public FollowListResponse getFollowers(Long targetUserId, Long cursor, int limit, Long memberUserId){
         Member target = getMember(targetUserId);
         //팔로워 페이지
@@ -80,6 +80,25 @@ public class FollowService {
             boolean isFollowBy = memberUserId != null && followRepository.existsByFollowerAndFollowee(follower,getMember(memberUserId));
 
             return FollowMemberResponse.of(follower, isFollowing, isFollowBy);
+        }).toList();
+
+        return  FollowListResponse.of(content,limit);
+    }
+
+    //4.팔로잉 목록
+    public FollowListResponse getFollowings(Long targetUserId, Long cursor, int limit, Long memberUserId){
+        Member target = getMember(targetUserId);
+        //팔로워 페이지
+        List<Follow> follows = followRepository.findFollowings(target, cursor, PageRequest.of(0, limit + 1));
+        //팔로워 목록에 표기할 유저
+        List<FollowMemberResponse> content = follows.stream().map(follow ->{
+            Member followee = follow.getFollowee();
+            //현재 팔로우 중인지
+            boolean isFollowing = memberUserId != null && followRepository.existsByFollowerAndFollowee(getMember(memberUserId), followee);
+            //타 유저가 나를 팔로우 중인지
+            boolean isFollowBy = memberUserId != null && followRepository.existsByFollowerAndFollowee(followee,getMember(memberUserId));
+
+            return FollowMemberResponse.of(followee, isFollowing, isFollowBy);
         }).toList();
 
         return  FollowListResponse.of(content,limit);
