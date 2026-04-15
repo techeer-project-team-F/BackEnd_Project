@@ -1,9 +1,15 @@
 package com.shelfeed.backend.domain.member.service;
 
+import com.shelfeed.backend.domain.genre.entity.Genre;
+import com.shelfeed.backend.domain.genre.entity.MemberGenre;
+import com.shelfeed.backend.domain.genre.repository.GenreRepository;
+import com.shelfeed.backend.domain.genre.repository.MemberGenreRepository;
 import com.shelfeed.backend.domain.member.dto.request.ChangePasswordRequest;
+import com.shelfeed.backend.domain.member.dto.request.OnboardingRequest;
 import com.shelfeed.backend.domain.member.dto.request.UpdateProfileRequest;
 import com.shelfeed.backend.domain.member.dto.request.WithdrawRequest;
 import com.shelfeed.backend.domain.member.dto.response.MyProfileResponse;
+import com.shelfeed.backend.domain.member.dto.response.OnboardingResponse;
 import com.shelfeed.backend.domain.member.dto.response.UpdateProfileResponse;
 import com.shelfeed.backend.domain.member.dto.response.UserProfileResponse;
 import com.shelfeed.backend.domain.member.entity.Member;
@@ -18,17 +24,51 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class MemberService {
 
     private final MemberRepository memberRepository;
+    private final GenreRepository genreRepository;
+    private final MemberGenreRepository memberGenreRepository;
     private final PasswordEncoder passwordEncoder;
     private final RedisService redisService;
     private final JwtProvider jwtProvider;
 
-    // ──1. 온보딩(추후 만들예정)
+    // ── 1. 온보딩
+    public OnboardingResponse completeOnboarding(Long memberUserId, OnboardingRequest request) {
+        Member member = memberRepository.findByMemberUserId(memberUserId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+
+        if (member.isOnboardingCompleted()) {
+            throw new BusinessException(ErrorCode.ONBOARDING_ALREADY_COMPLETED);
+        }
+
+        if (!request.getNickname().equals(member.getNickname())
+                && memberRepository.existsByNickname(request.getNickname())) {
+            throw new BusinessException(ErrorCode.NICKNAME_ALREADY_EXISTS);
+        }
+
+        List<Genre> genres = genreRepository.findAllById(request.getGenreIds());
+        if (genres.size() != request.getGenreIds().size()) {
+            throw new BusinessException(ErrorCode.GENRE_NOT_FOUND);
+        }
+
+        member.onboard(request.getNickname(), request.getBio(), request.getProfileImageUrl());
+
+        memberGenreRepository.deleteAllByMember(member);
+        memberGenreRepository.flush();
+        genres.stream()
+                .map(genre -> MemberGenre.create(member, genre))
+                .forEach(memberGenreRepository::save);
+
+        member.completeOnboarding();
+
+        return OnboardingResponse.of(member, genres);
+    }
 
     // ── 2. 내 프로필 조회
     @Transactional(readOnly = true)
@@ -45,7 +85,7 @@ public class MemberService {
             throw new BusinessException(ErrorCode.NICKNAME_ALREADY_EXISTS);
         }
 
-        member.updateProfile(request.getNickname(), request.getBio(), request.getProfileImageUrl(), request.getLibraryVisibility());
+        member.updateProfile(request.getNickname(), request.getBio(), request.getProfileImageUrl());
 
         return UpdateProfileResponse.of(member);
     }

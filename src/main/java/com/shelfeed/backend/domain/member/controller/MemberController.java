@@ -1,9 +1,11 @@
 package com.shelfeed.backend.domain.member.controller;
 
 import com.shelfeed.backend.domain.member.dto.request.ChangePasswordRequest;
+import com.shelfeed.backend.domain.member.dto.request.OnboardingRequest;
 import com.shelfeed.backend.domain.member.dto.request.UpdateProfileRequest;
 import com.shelfeed.backend.domain.member.dto.request.WithdrawRequest;
 import com.shelfeed.backend.domain.member.dto.response.MyProfileResponse;
+import com.shelfeed.backend.domain.member.dto.response.OnboardingResponse;
 import com.shelfeed.backend.domain.member.dto.response.UpdateProfileResponse;
 import com.shelfeed.backend.domain.member.dto.response.UserProfileResponse;
 import com.shelfeed.backend.domain.member.service.MemberService;
@@ -27,6 +29,15 @@ public class MemberController {
 
     private final MemberService memberService;
     private final JwtProvider jwtProvider;
+    // 1. 온보딩  POST /api/v1/users/me/onboarding
+    @PostMapping("/me/onboarding")
+    public ApiResponse<OnboardingResponse> completeOnboarding(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Valid @RequestBody OnboardingRequest request) {
+        return ApiResponse.success(200, "온보딩이 완료되었습니다.",
+                memberService.completeOnboarding(userDetails.getMember().getMemberUserId(), request));
+    }
+
     // 2. 내 프로필 조회  GET /api/v1/users/me
     @GetMapping("/me")
     public ApiResponse<MyProfileResponse> getMyProfile(
@@ -36,7 +47,7 @@ public class MemberController {
     }
 
     // 3. 프로필 수정  PATCH /api/v1/users/me
-    @PostMapping("/me")
+    @PatchMapping("/me")
     public ApiResponse<UpdateProfileResponse> updateProfile(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody UpdateProfileRequest request){
@@ -78,7 +89,7 @@ public class MemberController {
             @RequestHeader("Authorization") String bearerToken,//요청헤더에서 Authorization 만 가져오기
             @RequestBody WithdrawRequest request, HttpServletResponse response){
         String accessToken = bearerToken.substring(7);
-        memberService.withdraw(userDetails.getMember().getMemberId(), accessToken, request);
+        memberService.withdraw(userDetails.getMember().getMemberUserId(), accessToken, request);
         deleteRefreshTokenCookie(response);
         return ApiResponse.success(200,"회원 탈퇴가 완료되었습니다.");
     }
