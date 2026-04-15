@@ -54,4 +54,14 @@ public class CommentController {
         return ApiResponse.success(200, "댓글이 수정되었습니다.",
                 commentService.updateComment(reviewId, commentId, memberUserId, request));
     }
+    // 7.4 댓글 삭제  DELETE /api/v1/reviews/{reviewId}/comments/{commentId}
+    @DeleteMapping("/{reviewId}/comments/{commentId}")
+    public ApiResponse<Void> deleteComment(
+            @PathVariable Long reviewId,
+            @PathVariable Long commentId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Long memberUserId = userDetails.getMember().getMemberUserId();
+        commentService.deleteComment(reviewId, commentId, memberUserId);
+        return ApiResponse.success(200, "댓글이 삭제되었습니다.");
+    }
 }

@@ -93,6 +93,21 @@ public class CommentService {
 
         return CommentUpdateResponse.of(comment);
     }
+    // 4. 댓글 삭제
+    @Transactional
+    public void deleteComment(Long reviewId, Long commentId, Long memberUserId){
+        Comment comment = getComment(commentId);
+        //리뷰 없으면
+        if (!comment.getReview().getReviewId().equals(reviewId)){
+            throw new BusinessException(ErrorCode.COMMENT_NOT_FOUND);
+        }
+        //작성한 유저가 없으면
+        if (!comment.getMember().getMemberUserId().equals(memberUserId)){
+            throw new BusinessException(ErrorCode.NOT_COMMENT_OWNER);
+        }
+        comment.softDelete();;
+        comment.getReview().decreaseCommentCount();
+    }
 
 
 
