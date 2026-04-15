@@ -1,11 +1,10 @@
 package com.shelfeed.backend.domain.comment.service;
 
 import com.shelfeed.backend.domain.comment.dto.request.CommentCreateRequest;
-import com.shelfeed.backend.domain.comment.dto.response.CommentCreateResponse;
-import com.shelfeed.backend.domain.comment.dto.response.CommentListResponse;
-import com.shelfeed.backend.domain.comment.dto.response.CommentResponse;
-import com.shelfeed.backend.domain.comment.dto.response.ReplyResponse;
+import com.shelfeed.backend.domain.comment.dto.request.CommentUpdateRequest;
+import com.shelfeed.backend.domain.comment.dto.response.*;
 import com.shelfeed.backend.domain.comment.entity.Comment;
+import com.shelfeed.backend.domain.comment.entity.CommentLike;
 import com.shelfeed.backend.domain.comment.repository.CommentLikeRepository;
 import com.shelfeed.backend.domain.comment.repository.CommentRepository;
 import com.shelfeed.backend.domain.member.entity.Member;
@@ -78,6 +77,72 @@ public class CommentService {
         }).toList();
         return CommentListResponse.of(content,limit);
     }
+
+    // 3. 댓글 수정
+    @Transactional
+    public CommentUpdateResponse updateComment(Long reviewId, Long commentId, Long memberUserId, CommentUpdateRequest request){
+        Comment comment = getComment(commentId);
+        //리뷰 없으면
+        if (!comment.getReview().getReviewId().equals(reviewId)){
+            throw new BusinessException(ErrorCode.COMMENT_NOT_FOUND);
+        }
+        //작성한 유저가 없으면
+        if (!comment.getMember().getMemberUserId().equals(memberUserId)){
+            throw new BusinessException(ErrorCode.NOT_COMMENT_OWNER);
+        }
+        comment.update(request.getContent());
+
+        return CommentUpdateResponse.of(comment);
+    }
+    // 4. 댓글 삭제
+    @Transactional
+    public void deleteComment(Long reviewId, Long commentId, Long memberUserId){
+        Comment comment = getComment(commentId);
+        //리뷰 없으면
+        if (!comment.getReview().getReviewId().equals(reviewId)){
+            throw new BusinessException(ErrorCode.COMMENT_NOT_FOUND);
+        }
+        //작성한 유저가 없으면
+        if (!comment.getMember().getMemberUserId().equals(memberUserId)){
+            throw new BusinessException(ErrorCode.NOT_COMMENT_OWNER);
+        }
+        comment.softDelete();;
+        comment.getReview().decreaseCommentCount();
+    }
+    // 5. 댓글 좋아요
+    @Transactional
+    public CommentLikeResponse likeComment(Long reviewId, Long commentId, Long memberUserId) {
+        Member member = getMember(memberUserId);
+        Comment comment = getComment(commentId);
+        if (!comment.getReview().getReviewId().equals(reviewId)) {
+            throw new BusinessException(ErrorCode.COMMENT_NOT_FOUND);
+        }
+        if (comment.getMember().getMemberUserId().equals(memberUserId)) {
+            throw new BusinessException(ErrorCode.SELF_LIKE_NOT_ALLOWED);
+        }
+        if (commentLikeRepository.existsByComment_CommentIdAndMember_MemberUserId(commentId, memberUserId)){
+            throw new BusinessException(ErrorCode.ALREADY_COMMENT_LIKED);
+        }
+        commentLikeRepository.save(CommentLike.create(member, comment));
+        comment.increaseLikeCount();
+        return CommentLikeResponse.of(comment);
+    }
+
+    // 6. 댓글 좋아요 취소
+    @Transactional
+    public CommentLikeResponse unlikeComment(Long reviewId, Long commentId, Long memberUserId) {
+        Comment comment = getComment(commentId);
+        if (!comment.getReview().getReviewId().equals(reviewId)) {
+            throw new BusinessException(ErrorCode.COMMENT_NOT_FOUND);
+        }
+        CommentLike commentLike = commentLikeRepository.findByComment_CommentIdAndMember_MemberUserId(commentId,memberUserId)
+                .orElseThrow(()->new BusinessException(ErrorCode.COMMENT_LIKE_NOT_FOUND));
+        commentLikeRepository.delete(commentLike);
+        comment.decreaseLikeCount();
+        return CommentLikeResponse.of(comment);
+    }
+
+
 
     //추가 메서드
     private Member getMember(Long memberUserId) {
