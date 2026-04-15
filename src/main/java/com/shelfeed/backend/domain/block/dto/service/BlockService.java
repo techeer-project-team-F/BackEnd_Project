@@ -62,7 +62,17 @@ public class BlockService {
             followee.decreaseFollowerCount();
         }
     }
+//차단 해제
+    @Transactional
+    public void unblock(Long targetUserId, Long memberUserId) {
+        Member blocker = getMember(memberUserId);
+        Member blocked = getMember(targetUserId);
 
+        Block block = blockRepository.findByBlockerAndBlocked(blocker,blocked)
+                .orElseThrow(() -> new BusinessException(ErrorCode.BLOCK_NOT_FOUND));
+
+        blockRepository.delete(block);
+    }
 
 
 

@@ -70,4 +70,13 @@ public class FollowController {
         blockService.block(userId, memberUserId);
         return ApiResponse.success(201, "사용자를 차단했습니다.");
     }
+    // 6 차단 해제  DELETE /api/v1/users/{userId}/block
+    @DeleteMapping("/{userId}/block")
+    public ApiResponse<Void> unblockUser(
+            @PathVariable Long userId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Long memberUserId = userDetails.getMember().getMemberUserId();
+        blockService.unblock(userId, memberUserId);
+        return ApiResponse.success(200,"차단이 해제되었습니다.");
+    }
 }
