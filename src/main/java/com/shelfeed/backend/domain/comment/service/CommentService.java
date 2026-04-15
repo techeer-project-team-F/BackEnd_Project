@@ -4,6 +4,7 @@ import com.shelfeed.backend.domain.comment.dto.request.CommentCreateRequest;
 import com.shelfeed.backend.domain.comment.dto.request.CommentUpdateRequest;
 import com.shelfeed.backend.domain.comment.dto.response.*;
 import com.shelfeed.backend.domain.comment.entity.Comment;
+import com.shelfeed.backend.domain.comment.entity.CommentLike;
 import com.shelfeed.backend.domain.comment.repository.CommentLikeRepository;
 import com.shelfeed.backend.domain.comment.repository.CommentRepository;
 import com.shelfeed.backend.domain.member.entity.Member;
@@ -107,6 +108,38 @@ public class CommentService {
         }
         comment.softDelete();;
         comment.getReview().decreaseCommentCount();
+    }
+    // 5. 댓글 좋아요
+    @Transactional
+    public CommentLikeResponse likeComment(Long reviewId, Long commentId, Long memberUserId) {
+        Member member = getMember(memberUserId);
+        Comment comment = getComment(commentId);
+        if (!comment.getReview().getReviewId().equals(reviewId)) {
+            throw new BusinessException(ErrorCode.COMMENT_NOT_FOUND);
+        }
+        if (comment.getMember().getMemberUserId().equals(memberUserId)) {
+            throw new BusinessException(ErrorCode.SELF_LIKE_NOT_ALLOWED);
+        }
+        if (commentLikeRepository.existsByComment_CommentIdAndMember_MemberUserId(commentId, memberUserId)){
+            throw new BusinessException(ErrorCode.ALREADY_COMMENT_LIKED);
+        }
+        commentLikeRepository.save(CommentLike.create(member, comment));
+        comment.increaseLikeCount();
+        return CommentLikeResponse.of(comment);
+    }
+
+    // 6. 댓글 좋아요 취소
+    @Transactional
+    public CommentLikeResponse unlikeComment(Long reviewId, Long commentId, Long memberUserId) {
+        Comment comment = getComment(commentId);
+        if (!comment.getReview().getReviewId().equals(reviewId)) {
+            throw new BusinessException(ErrorCode.COMMENT_NOT_FOUND);
+        }
+        CommentLike commentLike = commentLikeRepository.findByComment_CommentIdAndMember_MemberUserId(commentId,memberUserId)
+                .orElseThrow(()->new BusinessException(ErrorCode.COMMENT_LIKE_NOT_FOUND));
+        commentLikeRepository.delete(commentLike);
+        comment.decreaseLikeCount();
+        return CommentLikeResponse.of(comment);
     }
 
 
