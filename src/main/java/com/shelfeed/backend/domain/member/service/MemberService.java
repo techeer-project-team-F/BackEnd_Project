@@ -60,10 +60,14 @@ public class MemberService {
         member.onboard(request.getNickname(), request.getBio(), request.getProfileImageUrl());
 
         memberGenreRepository.deleteAllByMember(member);
-        memberGenreRepository.flush();
-        genres.stream()
+
+
+        List<MemberGenre> memberGenres = genres.stream()
                 .map(genre -> MemberGenre.create(member, genre))
-                .forEach(memberGenreRepository::save);
+                .toList();
+
+        // 2. saveAll()을 호출하여 한 번에 저장 (N번의 save 호출 방지)
+        memberGenreRepository.saveAll(memberGenres);
 
         member.completeOnboarding();
 

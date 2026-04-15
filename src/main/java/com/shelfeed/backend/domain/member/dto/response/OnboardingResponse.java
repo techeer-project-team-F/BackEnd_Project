@@ -11,7 +11,7 @@ import java.util.List;
 @Builder
 public class OnboardingResponse {
 
-    private Long memberId;
+    private Long memberUserId;
     private String nickname;
     private String profileImageUrl;
     private String bio;
