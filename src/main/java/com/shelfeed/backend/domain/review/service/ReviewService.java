@@ -2,6 +2,7 @@ package com.shelfeed.backend.domain.review.service;
 
 import com.shelfeed.backend.domain.book.entity.Book;
 import com.shelfeed.backend.domain.book.repository.BookRepository;
+import com.shelfeed.backend.domain.feed.repository.FeedRepository;
 import com.shelfeed.backend.domain.library.entity.LibraryBook;
 import com.shelfeed.backend.domain.library.repository.LibraryRepository;
 import com.shelfeed.backend.domain.member.entity.Member;
@@ -38,6 +39,7 @@ public class ReviewService {
     private final TagRepository tagRepository;
     private final ReviewTagRepository reviewTagRepository;
     private final ReviewLikeRepository reviewLikeRepository;
+    private final FeedRepository feedRepository;
 
     // ── 1 감상 작성
     @Transactional
@@ -126,6 +128,8 @@ public class ReviewService {
         if (review.getReviewStatus() == ReviewStatus.PUBLISHED){
             review.getMember().decreaseReviewCount();
         }
+        review.softDelect();
+        feedRepository.deleteByReview(review);
     }
     //5. 내 감상 목록
     public List<ReviewSummaryResponse> getMyReviews(Long memberUserId, ReviewStatus status, Long cursor, int limit){
