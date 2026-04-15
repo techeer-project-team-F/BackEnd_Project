@@ -1,6 +1,8 @@
 package com.shelfeed.backend.domain.follow.service;
 
 import com.shelfeed.backend.domain.feed.repository.FeedRepository;
+import com.shelfeed.backend.domain.follow.dto.response.FollowListResponse;
+import com.shelfeed.backend.domain.follow.dto.response.FollowMemberResponse;
 import com.shelfeed.backend.domain.follow.dto.response.FollowResponse;
 import com.shelfeed.backend.domain.follow.dto.response.UnfollowResponse;
 import com.shelfeed.backend.domain.follow.entity.Follow;
@@ -10,8 +12,11 @@ import com.shelfeed.backend.domain.member.repository.MemberRepository;
 import com.shelfeed.backend.global.common.exception.BusinessException;
 import com.shelfeed.backend.global.common.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 import static com.shelfeed.backend.domain.follow.entity.QFollow.follow;
 
@@ -60,6 +65,24 @@ public class FollowService {
         feedRepository.deleteByMemberAndReview_Member(follower,followee);
 
         return UnfollowResponse.of(followee,follower);
+    }
+    //팔로워 목록
+    public FollowListResponse getFollowers(Long targetUserId, Long cursor, int limit, Long memberUserId){
+        Member target = getMember(targetUserId);
+        //팔로워 페이지
+        List<Follow> follows = followRepository.findFollowers(target, cursor, PageRequest.of(0, limit + 1));
+        //팔로워 목록에 표기할 유저
+        List<FollowMemberResponse> content = follows.stream().map(follow ->{
+            Member follower = follow.getFollower();
+            //현재 팔로우 중인지
+            boolean isFollowing = memberUserId != null && followRepository.existsByFollowerAndFollowee(getMember(memberUserId), follower);
+            //타 유저가 나를 팔로우 중인지
+            boolean isFollowBy = memberUserId != null && followRepository.existsByFollowerAndFollowee(follower,getMember(memberUserId));
+
+            return FollowMemberResponse.of(follower, isFollowing, isFollowBy);
+        }).toList();
+
+        return  FollowListResponse.of(content,limit);
     }
 
 

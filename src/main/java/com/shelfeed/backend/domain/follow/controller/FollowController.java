@@ -1,5 +1,6 @@
 package com.shelfeed.backend.domain.follow.controller;
 
+import com.shelfeed.backend.domain.follow.dto.response.FollowListResponse;
 import com.shelfeed.backend.domain.follow.dto.response.FollowResponse;
 import com.shelfeed.backend.domain.follow.dto.response.UnfollowResponse;
 import com.shelfeed.backend.domain.follow.service.FollowService;
@@ -36,5 +37,17 @@ public class FollowController {
         Long memberUserId = userDetails.getMember().getMemberUserId();
         return ApiResponse.success(200, "언팔로우했습니다.",
                 followService.unfollow(userId, memberUserId));
+    }
+
+    // 11.3 팔로워 목록  GET /api/v1/users/{userId}/followers
+    @GetMapping("/{userId}/followers")
+    public ApiResponse<FollowListResponse> getFollowers(
+            @PathVariable Long userId,
+            @RequestParam(required = false) Long cursor,
+            @RequestParam(defaultValue = "20") int limit,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Long memberUserId = userDetails != null ? userDetails.getMember().getMemberUserId() : null;
+        return ApiResponse.success(200,
+                followService.getFollowers(userId, cursor, limit, memberUserId));
     }
 }
