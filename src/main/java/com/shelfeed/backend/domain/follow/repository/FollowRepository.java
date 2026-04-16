@@ -35,6 +35,18 @@ public interface FollowRepository extends JpaRepository<Follow,Long> {
     List<Follow> findFollowings(@Param("member") Member member, @Param("cursor") Long cursor,
                                Pageable pageable);
 
+    // 팔로잉 목록 + followee JOIN FETCH (N+1 방지)
+    @Query("""
+    SELECT f FROM Follow f
+    JOIN FETCH f.followee
+    WHERE f.follower = :target
+    AND (:cursor IS NULL OR f.followId < :cursor)
+    ORDER BY f.followId DESC
+""")
+    List<Follow> findFollowingsWithMember(@Param("target") Member target,
+                                          @Param("cursor") Long cursor,
+                                          Pageable pageable);
+
     //패치 조인  팔로워 조회 시 멤버 정보 한 번에
     @Query("""
     SELECT f FROM Follow f 
