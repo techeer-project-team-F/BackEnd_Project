@@ -18,7 +18,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -58,13 +61,38 @@ public class SearchService {
     // 도서 검색
     private SearchPageResponse<BookSearchResult> searchBooks(String query, Long cursor, int limit) {
         List<Book> books = bookRepository.searchBooks(query, cursor, PageRequest.of(0, limit + 1));
-        //페이지네이션
+        // 페이지네이션 처리
         boolean hasNext = books.size() > limit;
         List<Book> result = hasNext ? books.subList(0, limit) : books;
-        List<BookSearchResult> content = result.stream().map(book ->
-                BookSearchResult.of(book, bookRepository.findAverageRatingByBookId(book.getBookId()),
-                        bookRepository.countReviewsByBookId(book.getBookId()))
-        ).toList();
+
+        // 결과가 비어있으면 불필요한 IN 쿼리를 날리지 않음
+        if (result.isEmpty()) {
+            return SearchPageResponse.empty();
+        }
+
+        //IN 절로 통계 데이터 한 번에 조회
+        List<Object[]> stats = bookRepository.findReviewStatsByBooks(result);
+
+        // O(1) 조회를 위해 Map으로 변환
+        Map<Long, Object[]> statsMap = stats.stream()
+                .collect(Collectors.toMap(
+                        stat -> (Long) stat[0], // 배열의 0번째 인덱스: bookId
+                        stat -> stat            // 배열 전체를 Value로 저장
+                ));
+
+        //메모리 내에서 매핑 작업 수행
+        List<BookSearchResult> content = result.stream().map(book -> {
+            Long bookId = book.getBookId();
+
+            // Map에서 해당 도서의 통계 데이터를 꺼냄 (리뷰가 아예 없는 책은 null일 수 있음)
+            Object[] stat = statsMap.get(bookId);
+
+            // DB에서 리뷰가 없어 통계 결과가 없는 경우 기본값 처리 (평점 0.0, 리뷰수 0)
+            Double avgRating = (stat != null && stat[1] != null) ? (Double) stat[1] : 0.0;
+            Long reviewCount = (stat != null && stat[2] != null) ? (Long) stat[2] : 0L;
+
+            return BookSearchResult.of(book, avgRating, reviewCount);
+        }).toList();
 
         Long nextCursor = hasNext ? result.get(result.size() - 1).getBookId() : null;
 
