@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public interface FollowRepository extends JpaRepository<Follow,Long> {
 
@@ -33,6 +34,36 @@ public interface FollowRepository extends JpaRepository<Follow,Long> {
 """)
     List<Follow> findFollowings(@Param("member") Member member, @Param("cursor") Long cursor,
                                Pageable pageable);
+
+    //패치 조인  팔로워 조회 시 멤버 정보 한 번에
+    @Query("""
+    SELECT f FROM Follow f 
+    JOIN FETCH f.follower 
+    WHERE f.followee = :target AND f.followId < :cursor
+    """)
+    List<Follow> findFollowersWithMember(@Param("target") Member target,
+                                         @Param("cursor") Long cursor,
+                                         Pageable pageable);
+
+    //내가 타인을 팔로우 중인지 (Following 여부)
+    @Query("""
+    SELECT f.followee.memberUserId FROM Follow f 
+    WHERE f.follower = :me AND f.followee IN :candidates
+    """)
+    Set<Long> findFollowingIds(@Param("me") Member me,
+                               @Param("candidates") List<Member> candidates);
+
+    //타인이 나를 팔로우 중인지 (Follower 여부)
+    @Query("""
+    SELECT f.follower.memberUserId FROM Follow f 
+    WHERE f.followee = :me AND f.follower IN :candidates
+    """)
+    Set<Long> findFollowedByIds(@Param("me") Member me,
+                                @Param("candidates") List<Member> candidates);
+
+
+
+
 
     //타 유저의 팔로워 조회
     List<Follow> findByFollowee(Member followee);
