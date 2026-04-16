@@ -26,7 +26,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -128,7 +131,6 @@ public class ReviewService {
         if (review.getReviewStatus() == ReviewStatus.PUBLISHED){
             review.getMember().decreaseReviewCount();
         }
-        review.softDelect();
         feedRepository.deleteByReview(review);
     }
     //5. 내 감상 목록
@@ -138,7 +140,10 @@ public class ReviewService {
         boolean hasNext = reviews.size() > limit;// 다음 페이지 확인
         if (hasNext) reviews = reviews.subList(0, limit);// 한 개 빼기
 
-        return reviews.stream().map(review -> ReviewSummaryResponse.of(review,getTagNames(review))).toList();
+        Map<Long, List<String>> tagMap = getTagNamesByReviews(reviews);
+        return reviews.stream()
+                .map(review -> ReviewSummaryResponse.of(review, tagMap.getOrDefault(review.getReviewId(), Collections.emptyList())))
+                .toList();
     }
     //6. 타 유저 감상 목록
     public List<ReviewSummaryResponse> getUserReviews(Long userId, Long cursor, int limit) {
@@ -147,7 +152,10 @@ public class ReviewService {
         boolean hasNext = reviews.size() > limit;// 다음 페이지 확인
         if (hasNext) reviews = reviews.subList(0, limit);// 한 개 빼기
 
-        return reviews.stream().map(review -> ReviewSummaryResponse.of(review, getTagNames(review))).toList();
+        Map<Long, List<String>> tagMap = getTagNamesByReviews(reviews);
+        return reviews.stream()
+                .map(review -> ReviewSummaryResponse.of(review, tagMap.getOrDefault(review.getReviewId(), Collections.emptyList())))
+                .toList();
     }
     //7. 감상 좋아요
     @Transactional
@@ -200,10 +208,21 @@ public class ReviewService {
     private Review getReviewOrThrow(Long reviewId) {
         return reviewRepository.findByReviewIdAndIsDeletedFalse(reviewId).orElseThrow(()-> new BusinessException(ErrorCode.REVIEW_NOT_FOUND));
     }
-    //태그 이름 목록 조회
+    //태그 이름 목록 조회 (단건)
     private List<String> getTagNames(Review review) {
         return reviewTagRepository.findByReview(review).stream()
                 .map(reviewTag -> reviewTag.getTag().getTagName()).toList();
+    }
+
+    //태그 이름 목록 일괄 조회 (IN절 - N+1 방지)
+    private Map<Long, List<String>> getTagNamesByReviews(List<Review> reviews) {
+        if (reviews.isEmpty()) return Map.of();
+        List<Long> reviewIds = reviews.stream().map(Review::getReviewId).toList();
+        return reviewTagRepository.findByReviewIdIn(reviewIds).stream()
+                .collect(Collectors.groupingBy(
+                        rt -> rt.getReview().getReviewId(),
+                        Collectors.mapping(rt -> rt.getTag().getTagName(), Collectors.toList())
+                ));
     }
 }
 

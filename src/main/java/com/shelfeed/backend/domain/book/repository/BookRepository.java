@@ -27,12 +27,27 @@ SELECT AVG(r.rating) FROM Review r WHERE r.book.bookId = :bookId AND r.isDeleted
 
     //도서 검색 쿼리
     @Query("""
-    SELECT b FROM Book b 
-    WHERE (b.title LIKE %:query% OR b.author LIKE %:query%) 
+    SELECT b FROM Book b
+    WHERE (b.title LIKE %:query% OR b.author LIKE %:query%)
     AND (:cursor IS NULL OR b.bookId < :cursor)
-    ORDER BY b.bookId DESC 
+    ORDER BY b.bookId DESC
 """)// %Like% 이기에 풀스캔을 때리는 상황이 발생해서 나중에 리팩토링 하겠습니다.
     List<Book> searchBooks(@Param("query") String query,
                            @Param("cursor") Long cursor,
                            Pageable pageable);
+
+    // ISBN 목록으로 일괄 조회 (N+1 방지)
+    List<Book> findByIsbn13In(List<String> isbn13List);
+
+    // 도서 목록의 평점/리뷰수 일괄 조회 (N+1 방지)
+    @Query("""
+    SELECT r.book.bookId, AVG(r.rating), COUNT(r)
+    FROM Review r
+    WHERE r.book IN :books
+    AND r.isDeleted = false
+    AND r.reviewVisibility = 'PUBLIC'
+    AND r.reviewStatus = 'PUBLISHED'
+    GROUP BY r.book.bookId
+""")
+    List<Object[]> findReviewStatsByBooks(@Param("books") List<Book> books);
 }

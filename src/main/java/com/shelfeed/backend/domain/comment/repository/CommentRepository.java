@@ -12,8 +12,8 @@ import java.util.Optional;
 
 public interface CommentRepository extends JpaRepository<Comment,Long> {
     //특벙 감상의 원 댓글만 골라서 조회(페이지네이션 방식으로)
-    @Query(""" 
-            SELECT c FROM Comment c
+    @Query("""
+            SELECT c FROM Comment c JOIN FETCH c.member
             WHERE c.review = :review
             AND c.parentComment IS NULL
             AND (:cursor IS NULL OR c.commentId < :cursor)
@@ -23,6 +23,10 @@ public interface CommentRepository extends JpaRepository<Comment,Long> {
 
     // 대댓글 조회
     List<Comment> findByParentComment(Comment parentComment);
+
+    // 대댓글 IN절 일괄 조회 (N+1 방지)
+    @Query("SELECT c FROM Comment c JOIN FETCH c.member WHERE c.parentComment IN :parents ORDER BY c.commentId ASC")
+    List<Comment> findRepliesByParents(@Param("parents") List<Comment> parents);
 
     // 삭제 안된 감상 조회
     Optional<Comment> findByCommentIdAndIsDeletedFalse(Long commentId);

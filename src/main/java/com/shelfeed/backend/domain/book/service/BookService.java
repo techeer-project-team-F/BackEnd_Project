@@ -24,8 +24,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -43,21 +48,48 @@ public class BookService {
     // 1. 도서 검색
     @Transactional
     public BookSearchListResponse searchBooks(BookSearchRequest request, Long memberUserId) {
-        AladinSearchResponse response = aladinApiClient.search(request.getQuery(), 1 , request.getLimit() +1); //무한스크롤을 위해 +1 개 더 조회
-    if (response == null || response.getItems() == null) {
-        return BookSearchListResponse.of(List.of(), request.getLimit());// 내용없으면 빈 리스트
-    }
+        AladinSearchResponse response = aladinApiClient.search(request.getQuery(), 1, request.getLimit() + 1); //무한스크롤을 위해 +1 개 더 조회
+        if (response == null || response.getItems() == null) {
+            return BookSearchListResponse.of(List.of(), request.getLimit());// 내용없으면 빈 리스트
+        }
 
-    List<Book> books = response.getItems().stream().map(this::findOrCreateBook).toList();//getItems들을 findOrCreateBook 넣어라
-    Member member= memberUserId != null ? getMemberOrNull(memberUserId) : null;//멤버 없으면 null 있으면 사용
+        List<AladinItem> items = response.getItems();
 
-    //책이 유저의 서재에 담겨 있는가
-    List<BookSummaryResponse> content = books.stream().map(book -> { //각 책들을
-        boolean inMyLibrary = member != null && libraryRepository.existsByMemberIdAndBook_BookId(member, book.getBookId());//로그인이 되어있고 회원이 저장한 책이라면
-        return BookSummaryResponse.of(book,inMyLibrary);
-    }).toList();
+        //ISBN 목록으로 기존 도서 일괄 조회
+        List<String> isbns = items.stream().map(AladinItem::getIsbn13).toList();
+        Map<String, Book> existingBooks = bookRepository.findByIsbn13In(isbns).stream()
+                .collect(Collectors.toMap(Book::getIsbn13, b -> b));
 
-    return BookSearchListResponse.of(content, request.getLimit());
+        // DB에 없는 도서만 일괄 저장
+        List<Book> newBooks = items.stream()
+                .filter(item -> !existingBooks.containsKey(item.getIsbn13()))
+                .map(this::createBookFromItem)
+                .toList();
+        if (!newBooks.isEmpty()) bookRepository.saveAll(newBooks);
+
+        // 전체 도서 목록 구성 (기존 + 신규)
+        Map<String, Book> allBooksMap = new HashMap<>(existingBooks);
+        newBooks.forEach(b -> allBooksMap.put(b.getIsbn13(), b));
+        List<Book> allBooks = items.stream()
+                .map(item -> allBooksMap.get(item.getIsbn13()))
+                .filter(Objects::nonNull)
+                .toList();
+
+        Member member = memberUserId != null ? getMemberOrNull(memberUserId) : null;
+
+        // 서재 여부 IN절 일괄 조회
+        Set<Long> myLibraryBookIds = Set.of();
+        if (member != null && !allBooks.isEmpty()) {
+            List<Long> bookIds = allBooks.stream().map(Book::getBookId).toList();
+            myLibraryBookIds = libraryRepository.findBookIdsByMemberAndBookIdIn(member, bookIds);
+        }
+
+        final Set<Long> finalMyLibraryBookIds = myLibraryBookIds;
+        List<BookSummaryResponse> content = allBooks.stream()
+                .map(book -> BookSummaryResponse.of(book, finalMyLibraryBookIds.contains(book.getBookId())))
+                .toList();
+
+        return BookSearchListResponse.of(content, request.getLimit());
     }
 
 
@@ -130,7 +162,22 @@ public class BookService {
         return BookReviewListResponse.of(content, request.getLimit());
     }
 
-    // 알라딘 아이템 → DB Book (없으면 저장)
+    // 알라딘 아이템 → Book 엔티티 생성 (저장 없이 객체만 반환, saveAll용)
+    private Book createBookFromItem(AladinItem item) {
+        LocalDate pubDate = null;
+        try {
+            pubDate = LocalDate.parse(item.getPubDate());
+        } catch (Exception ignored) {}
+        Integer totalPages = item.getSubInfo() != null ? item.getSubInfo().getItemPage() : null;
+        return Book.create(
+                item.getIsbn13(), item.getTitle(), item.getAuthor(), item.getPublisher(),
+                item.getCover(), item.getDescription(), totalPages, pubDate,
+                item.getItemId() != null ? String.valueOf(item.getItemId()) : null,
+                item.getCategoryName()
+        );
+    }
+
+    // 알라딘 아이템 → DB Book (없으면 저장) - 단건 조회용 (getBookByIsbn 등)
     private Book findOrCreateBook(AladinItem item) {
         return bookRepository.findByIsbn13(item.getIsbn13())
                 .orElseGet(() -> {

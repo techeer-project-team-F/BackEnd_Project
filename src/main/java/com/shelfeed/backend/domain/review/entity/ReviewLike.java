@@ -35,13 +35,6 @@ public class ReviewLike {
     private LocalDateTime createdAt;
 
     //정적 메서드
-    public static ReviewLike reviewLike(Member member, Review review) {
-        ReviewLike reviewLike = new ReviewLike();
-        reviewLike.member = member;
-        reviewLike.review = review;
-        return reviewLike;
-    }
-
     public static ReviewLike create(Review review, Member member) {
         ReviewLike like = new ReviewLike();
         like.review = review;

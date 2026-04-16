@@ -16,7 +16,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import static com.shelfeed.backend.domain.follow.entity.QFollow.follow;
 
@@ -69,15 +71,34 @@ public class FollowService {
     //3.팔로워 목록
     public FollowListResponse getFollowers(Long targetUserId, Long cursor, int limit, Long memberUserId){
         Member target = getMember(targetUserId);
-        //팔로워 페이지
-        List<Follow> follows = followRepository.findFollowers(target, cursor, PageRequest.of(0, limit + 1));
+        //사용자 정보 1번만 조회
+        Member me = (memberUserId != null) ? getMember(memberUserId) : null;
+        //팔로워 목록 조회(패치조인)
+        List<Follow> follows = followRepository.findFollowersWithMember(target, cursor, PageRequest.of(0, limit + 1));
+        // 대상이 되는 팔러워 리스트 추출
+        List<Member> candidates = follows.stream().map(Follow::getFollower).toList();
+        //팔로우 관계 in 절
+        Set<Long> followingIds = Collections.emptySet();
+        Set<Long> followedByIds = Collections.emptySet();
+
+        if (me != null && !candidates.isEmpty()) {
+            followingIds = followRepository.findFollowingIds(me, candidates);
+            followedByIds = followRepository.findFollowedByIds(me, candidates);
+        }
+
+        final Set<Long> finalFollowingIds = followingIds;
+        final Set<Long> finalFollowedByIds = followedByIds;
+
+
         //팔로워 목록에 표기할 유저
         List<FollowMemberResponse> content = follows.stream().map(follow ->{
             Member follower = follow.getFollower();
+            Long followerId = follower.getMemberUserId();
+
             //현재 팔로우 중인지
-            boolean isFollowing = memberUserId != null && followRepository.existsByFollowerAndFollowee(getMember(memberUserId), follower);
+            boolean isFollowing = finalFollowingIds.contains(followerId);
             //타 유저가 나를 팔로우 중인지
-            boolean isFollowBy = memberUserId != null && followRepository.existsByFollowerAndFollowee(follower,getMember(memberUserId));
+            boolean isFollowBy = finalFollowedByIds.contains(followerId);
 
             return FollowMemberResponse.of(follower, isFollowing, isFollowBy);
         }).toList();
@@ -88,20 +109,33 @@ public class FollowService {
     //4.팔로잉 목록
     public FollowListResponse getFollowings(Long targetUserId, Long cursor, int limit, Long memberUserId){
         Member target = getMember(targetUserId);
-        //팔로워 페이지
-        List<Follow> follows = followRepository.findFollowings(target, cursor, PageRequest.of(0, limit + 1));
-        //팔로워 목록에 표기할 유저
-        List<FollowMemberResponse> content = follows.stream().map(follow ->{
-            Member followee = follow.getFollowee();
-            //현재 팔로우 중인지
-            boolean isFollowing = memberUserId != null && followRepository.existsByFollowerAndFollowee(getMember(memberUserId), followee);
-            //타 유저가 나를 팔로우 중인지
-            boolean isFollowBy = memberUserId != null && followRepository.existsByFollowerAndFollowee(followee,getMember(memberUserId));
+        // 사용자 정보 1번만 조회
+        Member me = (memberUserId != null) ? getMember(memberUserId) : null;
+        // 팔로잉 목록 조회 (패치조인)
+        List<Follow> follows = followRepository.findFollowingsWithMember(target, cursor, PageRequest.of(0, limit + 1));
+        // 대상이 되는 팔로잉 리스트 추출
+        List<Member> candidates = follows.stream().map(Follow::getFollowee).toList();
+        // 팔로우 관계 IN절
+        Set<Long> followingIds = Collections.emptySet();
+        Set<Long> followedByIds = Collections.emptySet();
 
+        if (me != null && !candidates.isEmpty()) {
+            followingIds = followRepository.findFollowingIds(me, candidates);
+            followedByIds = followRepository.findFollowedByIds(me, candidates);
+        }
+
+        final Set<Long> finalFollowingIds = followingIds;
+        final Set<Long> finalFollowedByIds = followedByIds;
+
+        List<FollowMemberResponse> content = follows.stream().map(follow -> {
+            Member followee = follow.getFollowee();
+            Long followeeId = followee.getMemberUserId();
+            boolean isFollowing = finalFollowingIds.contains(followeeId);
+            boolean isFollowBy = finalFollowedByIds.contains(followeeId);
             return FollowMemberResponse.of(followee, isFollowing, isFollowBy);
         }).toList();
 
-        return  FollowListResponse.of(content,limit);
+        return FollowListResponse.of(content, limit);
     }
 
 

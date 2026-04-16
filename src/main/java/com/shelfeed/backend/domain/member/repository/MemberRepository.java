@@ -17,7 +17,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
     //닉네임 검색
     @Query("""
-    SELECT m FROM Memeber m WHERE m.nickname Like %:query%
+    SELECT m FROM Member m WHERE m.nickname Like %:query%
     AND (:cursor IS NULL OR m.memberUserId < :cursor)
     ORDER BY m.memberUserId DESC
 """)
