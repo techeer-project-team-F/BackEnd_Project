@@ -3,6 +3,7 @@ package com.shelfeed.backend.global.jwt;
 import com.shelfeed.backend.global.redis.RedisService;
 import com.shelfeed.backend.global.security.CustomUserDetailsService;
 import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -45,7 +46,26 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
             } catch (ExpiredJwtException e){
+                // 토큰 만료 시 명시적 401 처리
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // HTTP 401
+                response.setContentType("application/json");
+                response.setCharacterEncoding("UTF-8");
 
+                // 프론트엔드가 파싱하기 쉬운 JSON 형태로 변환
+                String errorMessage = "{\"errorCode\": \"TOKEN_EXPIRED\", \"message\": \"액세스 토큰이 만료되었습니다. 토큰을 재발급해 주세요.\"}";
+                response.getWriter().write(errorMessage);
+                // 필터 체인 진행 중단
+                return;
+            } catch (JwtException | IllegalArgumentException e){
+                // 토큰 만료 시 명시적 401 처리
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json");
+                response.setCharacterEncoding("UTF-8");
+                // 프론트엔드가 파싱하기 쉬운 JSON 형태로 변환
+                String errorMessage = "{\"errorCode\": \"INVALID_TOKEN\", \"message\": \"유효하지 않은 토큰입니다.\"}";
+                response.getWriter().write(errorMessage);
+                // 필터 체인 진행 중단
+                return;
             }
         }
         filterChain.doFilter(request,response);
