@@ -131,7 +131,6 @@ public class ReviewService {
         if (review.getReviewStatus() == ReviewStatus.PUBLISHED){
             review.getMember().decreaseReviewCount();
         }
-        review.softDelect();
         feedRepository.deleteByReview(review);
     }
     //5. 내 감상 목록
