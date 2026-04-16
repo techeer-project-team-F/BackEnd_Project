@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.security.SecureRandom;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -323,8 +324,10 @@ public class AuthService {
     }
 
     //기타
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
     private String generateSixDigitCode(){
-        return String.format("%06d", (int) (Math.random() * 1_000_000));//무작위 6자리 수 만듦
+        return String.format("%06d", SECURE_RANDOM.nextInt(1_000_000));//무작위 6자리 수 만듦
     }
 
     public record TokenPair(SignupResponse response, String refreshToken){}
