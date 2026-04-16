@@ -49,7 +49,7 @@ public class LibraryService {
     public LibraryListResponse getMyLibrary(Long memberUserId, ReadingStatus status, Long cursor, int limit){
         Member member = getMember(memberUserId);
         //Id 기반 페이지 네이션
-        List<LibraryBook> books = libraryRepository.findMyLibrary(member,status,cursor, PageRequest.of(0,limit + 1));
+        List<LibraryBook> books = libraryRepository.findLibraryBooks(member, status, cursor, PageRequest.of(0, limit + 1));
 
         List<LibraryBookSummaryResponse> content = books.stream().map(LibraryBookSummaryResponse::of).toList();
 
@@ -99,7 +99,7 @@ public class LibraryService {
             return UserLibraryResponse.ofPrivate();
         }
 
-        List<LibraryBook> books = libraryRepository.findUserLibrary(member, status, cursor, PageRequest.of(0, limit + 1));
+        List<LibraryBook> books = libraryRepository.findLibraryBooks(member, status, cursor, PageRequest.of(0, limit + 1));
         List<LibraryBookSummaryResponse> content = books.stream().map(LibraryBookSummaryResponse::of).toList();
         return UserLibraryResponse.of(content, limit);
     }
