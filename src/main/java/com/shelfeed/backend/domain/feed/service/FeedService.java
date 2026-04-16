@@ -6,6 +6,7 @@ import com.shelfeed.backend.domain.feed.entity.Feed;
 import com.shelfeed.backend.domain.feed.repository.FeedRepository;
 import com.shelfeed.backend.domain.member.entity.Member;
 import com.shelfeed.backend.domain.member.repository.MemberRepository;
+import com.shelfeed.backend.domain.review.entity.ReviewTag;
 import com.shelfeed.backend.domain.review.repository.ReviewLikeRepository;
 import com.shelfeed.backend.domain.review.repository.ReviewTagRepository;
 import com.shelfeed.backend.global.common.exception.BusinessException;
@@ -15,7 +16,11 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -31,20 +36,30 @@ public class FeedService {
     public FeedListResponse getFollowingFeed(Long memberUserId, Long cursor, int limit) {
         Member member = getMember(memberUserId);
         //피드페이지
-        List<Feed> feeds = feedRepository.findFeed(member,cursor, PageRequest.of(0, limit +1));
+        //패치 조인으로 피드랑 감상 가져오기
+        List<Feed> feeds = feedRepository.findFeedWithDetails(member,cursor, PageRequest.of(0, limit +1));
+        // 리뷰 아이디만 뽑기(in절에 사용하려고)
+        List<Long> reviewIds = feeds.stream().map(feed -> feed.getReview().getReviewId()).toList();
+        //in절로 좋아요 조회
+        Set<Long> likedReviewIds = reviewLikeRepository.findLikedReviewIds(reviewIds, memberUserId);
+        //태그 목록 in 절
+        List<ReviewTag> allTags = reviewTagRepository.findByReviewIdIn(reviewIds);
+        Map<Long, List<String>> tagMap = allTags.stream()
+                .collect(Collectors.groupingBy(
+                        rt -> rt.getReview().getReviewId(),
+                        Collectors.mapping(rt -> rt.getTag().getTagName(), Collectors.toList())
+                ));
+        //최종
         List<FeedItemResponse> content = feeds.stream().map(feed -> {
             Long reviewId = feed.getReview().getReviewId();
+            boolean isLiked = likedReviewIds.contains(reviewId);
+            List<String> tags = tagMap.getOrDefault(reviewId, Collections.emptyList());
 
-            // 내가 감상에 좋아요를 눌렀는 가
-            boolean isLiked = reviewLikeRepository.existsByReview_ReviewIdAndMember_MemberUserId(reviewId,memberUserId);
-
-            // 감상에 달린 테그 목록
-            List<String> tag = reviewTagRepository.findByReview(feed.getReview()).stream()
-                    .map(rt -> rt.getTag().getTagName()).toList();
-            return FeedItemResponse.of(feed, isLiked, tag);
-
+            return FeedItemResponse.of(feed, isLiked, tags);
         }).toList();
-        return FeedListResponse.of(content,limit);
+
+        return FeedListResponse.of(content, limit);
+
     }
 
     private Member getMember(Long memberUserId) {
