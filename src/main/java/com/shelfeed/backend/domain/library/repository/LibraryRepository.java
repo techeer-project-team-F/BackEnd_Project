@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public interface LibraryRepository extends JpaRepository<LibraryBook,Long> {
     //중복 확인
@@ -36,6 +37,9 @@ public interface LibraryRepository extends JpaRepository<LibraryBook,Long> {
                                       Pageable pageable);
     Optional<LibraryBook> findByMemberIdAndBook_BookId(Member member,Long bookId);
 
+    // 서재에 담긴 도서 ID 목록 일괄 조회 (N+1 방지)
+    @Query("SELECT lb.book.bookId FROM LibraryBook lb WHERE lb.memberId = :member AND lb.book.bookId IN :bookIds")
+    Set<Long> findBookIdsByMemberAndBookIdIn(@Param("member") Member member, @Param("bookIds") List<Long> bookIds);
 
 }
 

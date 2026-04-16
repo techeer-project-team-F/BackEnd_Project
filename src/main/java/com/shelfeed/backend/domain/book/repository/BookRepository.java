@@ -36,6 +36,9 @@ SELECT AVG(r.rating) FROM Review r WHERE r.book.bookId = :bookId AND r.isDeleted
                            @Param("cursor") Long cursor,
                            Pageable pageable);
 
+    // ISBN 목록으로 일괄 조회 (N+1 방지)
+    List<Book> findByIsbn13In(List<String> isbn13List);
+
     // 도서 목록의 평점/리뷰수 일괄 조회 (N+1 방지)
     @Query("""
     SELECT r.book.bookId, AVG(r.rating), COUNT(r)

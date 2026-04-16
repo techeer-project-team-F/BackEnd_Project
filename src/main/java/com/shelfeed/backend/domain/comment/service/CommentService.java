@@ -19,7 +19,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.shelfeed.backend.domain.comment.entity.QComment.comment;
 
@@ -58,24 +62,42 @@ public class CommentService {
     public CommentListResponse getComments(Long reviewId, Long cursor, int limit, Long memberUserId){
         Review review = getReview(reviewId);
 
-        List<Comment> parentComments = commentRepository.findParentComments(review,cursor, PageRequest.of(0, limit + 1));
+        List<Comment> parentComments = commentRepository.findParentComments(review, cursor, PageRequest.of(0, limit + 1));
+        boolean hasNext = parentComments.size() > limit;
+        if (hasNext) parentComments = parentComments.subList(0, limit);
 
-        List<CommentResponse> content = parentComments.stream().map(comment ->{
-                    //로그인 한 사람인가
-                    boolean isMine = memberUserId != null && comment.getMember().getMemberUserId().equals(memberUserId);
-                    //좋아요 누른 사람인가
-                    boolean isLiked = memberUserId != null && commentLikeRepository.existsByComment_CommentIdAndMember_MemberUserId(comment.getCommentId(),memberUserId);
+        // 대댓글 IN절 일괄 조회
+        List<Comment> allReplies = parentComments.isEmpty()
+                ? List.of()
+                : commentRepository.findRepliesByParents(parentComments);
+        Map<Long, List<Comment>> repliesMap = allReplies.stream()
+                .collect(Collectors.groupingBy(r -> r.getParentComment().getCommentId()));
 
-                    List<ReplyResponse> replies = commentRepository.findByParentComment(comment).stream().map(reply -> {
-                        //로그인 한 유저 그리고 답글의 유저가 기존 멤버인가
+        // 좋아요 IN절 일괄 조회 (부모 댓글 + 대댓글 한번에)
+        Set<Long> likedIds = Set.of();
+        if (memberUserId != null) {
+            List<Long> allCommentIds = new ArrayList<>();
+            parentComments.forEach(c -> allCommentIds.add(c.getCommentId()));
+            allReplies.forEach(r -> allCommentIds.add(r.getCommentId()));
+            if (!allCommentIds.isEmpty()) {
+                likedIds = commentLikeRepository.findLikedCommentIds(allCommentIds, memberUserId);
+            }
+        }
+
+        final Set<Long> finalLikedIds = likedIds;
+        List<CommentResponse> content = parentComments.stream().map(comment -> {
+            boolean isMine = memberUserId != null && comment.getMember().getMemberUserId().equals(memberUserId);
+            boolean isLiked = finalLikedIds.contains(comment.getCommentId());
+
+            List<ReplyResponse> replies = repliesMap.getOrDefault(comment.getCommentId(), List.of()).stream()
+                    .map(reply -> {
                         boolean replyIsMine = memberUserId != null && reply.getMember().getMemberUserId().equals(memberUserId);
-                        // 로그인 한 유저 그리고 좋아요를 눌렀는가
-                        boolean replyIsLiked = memberUserId != null && commentLikeRepository.existsByComment_CommentIdAndMember_MemberUserId(reply.getCommentId(),memberUserId);
-                        return ReplyResponse.of(reply,replyIsMine,replyIsLiked);
-                }).toList();
-                    return CommentResponse.of(comment,isMine,isLiked,replies);
+                        boolean replyIsLiked = finalLikedIds.contains(reply.getCommentId());
+                        return ReplyResponse.of(reply, replyIsMine, replyIsLiked);
+                    }).toList();
+            return CommentResponse.of(comment, isMine, isLiked, replies);
         }).toList();
-        return CommentListResponse.of(content,limit);
+        return CommentListResponse.of(content, limit);
     }
 
     // 3. 댓글 수정
