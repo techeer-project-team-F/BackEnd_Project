@@ -52,6 +52,7 @@ public interface FollowRepository extends JpaRepository<Follow,Long> {
     SELECT f FROM Follow f
     JOIN FETCH f.follower
     WHERE f.followee = :target AND f.followId < :cursor
+    ORDER BY f.followId DESC
     """)
     List<Follow> findFollowersWithMember(@Param("target") Member target,
                                          @Param("cursor") Long cursor,
