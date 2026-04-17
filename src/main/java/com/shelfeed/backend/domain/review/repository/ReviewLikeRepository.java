@@ -1,7 +1,6 @@
 package com.shelfeed.backend.domain.review.repository;
 
 import com.shelfeed.backend.domain.review.entity.ReviewLike;
-import com.shelfeed.backend.domain.review.entity.ReviewTag;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -18,7 +17,7 @@ public interface ReviewLikeRepository extends JpaRepository<ReviewLike,Long> {
 
     //감상 좋아요 in절
     @Query("""
-    SELECT rl.review.reviewId FROM ReviewLike rl 
+    SELECT rl.review.reviewId FROM ReviewLike rl
     WHERE rl.review.reviewId IN :reviewIds AND rl.member.memberUserId = :userId
 """)
     Set<Long> findLikedReviewIds(@Param("reviewIds") List<Long> reviewIds,

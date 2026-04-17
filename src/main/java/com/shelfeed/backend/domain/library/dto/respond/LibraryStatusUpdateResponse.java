@@ -1,6 +1,5 @@
 package com.shelfeed.backend.domain.library.dto.respond;
 
-import com.shelfeed.backend.domain.library.dto.request.LibraryStatusUpdateRequest;
 import com.shelfeed.backend.domain.library.entity.LibraryBook;
 import com.shelfeed.backend.domain.library.enums.ReadingStatus;
 import lombok.Builder;

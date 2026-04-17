@@ -15,7 +15,6 @@ import com.shelfeed.backend.global.common.exception.BusinessException;
 import com.shelfeed.backend.global.common.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,7 +24,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.shelfeed.backend.domain.comment.entity.QComment.comment;
+
 
 @Service
 @RequiredArgsConstructor
@@ -128,7 +127,7 @@ public class CommentService {
         if (!comment.getMember().getMemberUserId().equals(memberUserId)){
             throw new BusinessException(ErrorCode.NOT_COMMENT_OWNER);
         }
-        comment.softDelete();;
+        comment.softDelete();
         comment.getReview().decreaseCommentCount();
     }
     // 5. 댓글 좋아요

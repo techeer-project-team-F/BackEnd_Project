@@ -1,6 +1,5 @@
 package com.shelfeed.backend.domain.member.repository;
 
-import com.shelfeed.backend.domain.member.entity.Member;
 import com.shelfeed.backend.domain.member.entity.SocialAccount;
 import org.springframework.data.jpa.repository.JpaRepository;
 

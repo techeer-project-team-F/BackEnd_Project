@@ -1,17 +1,14 @@
 package com.shelfeed.backend.domain.feed.repository;
 
 import com.shelfeed.backend.domain.feed.entity.Feed;
-import com.shelfeed.backend.domain.follow.entity.Follow;
 import com.shelfeed.backend.domain.member.entity.Member;
 import com.shelfeed.backend.domain.review.entity.Review;
-import com.shelfeed.backend.domain.review.entity.ReviewTag;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
-import java.util.Set;
 
 public interface FeedRepository extends JpaRepository<Feed, Long> {
     // 피드 목록 커서 페이지네이션
