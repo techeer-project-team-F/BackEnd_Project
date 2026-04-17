@@ -49,9 +49,10 @@ public interface FollowRepository extends JpaRepository<Follow,Long> {
 
     //패치 조인  팔로워 조회 시 멤버 정보 한 번에
     @Query("""
-    SELECT f FROM Follow f 
-    JOIN FETCH f.follower 
+    SELECT f FROM Follow f
+    JOIN FETCH f.follower
     WHERE f.followee = :target AND f.followId < :cursor
+    ORDER BY f.followId DESC
     """)
     List<Follow> findFollowersWithMember(@Param("target") Member target,
                                          @Param("cursor") Long cursor,
@@ -59,7 +60,7 @@ public interface FollowRepository extends JpaRepository<Follow,Long> {
 
     //내가 타인을 팔로우 중인지 (Following 여부)
     @Query("""
-    SELECT f.followee.memberUserId FROM Follow f 
+    SELECT f.followee.memberUserId FROM Follow f
     WHERE f.follower = :me AND f.followee IN :candidates
     """)
     Set<Long> findFollowingIds(@Param("me") Member me,
@@ -67,7 +68,7 @@ public interface FollowRepository extends JpaRepository<Follow,Long> {
 
     //타인이 나를 팔로우 중인지 (Follower 여부)
     @Query("""
-    SELECT f.follower.memberUserId FROM Follow f 
+    SELECT f.follower.memberUserId FROM Follow f
     WHERE f.followee = :me AND f.follower IN :candidates
     """)
     Set<Long> findFollowedByIds(@Param("me") Member me,

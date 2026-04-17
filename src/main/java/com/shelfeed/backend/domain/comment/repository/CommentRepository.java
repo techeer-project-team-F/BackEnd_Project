@@ -17,7 +17,8 @@ public interface CommentRepository extends JpaRepository<Comment,Long> {
             WHERE c.review = :review
             AND c.parentComment IS NULL
             AND (:cursor IS NULL OR c.commentId < :cursor)
-            ORDER BY c.commentId DESC """) // 훨씬 간단하게 JPQL 작성하는 방법
+            ORDER BY c.commentId DESC
+            """) // 훨씬 간단하게 JPQL 작성하는 방법
     List<Comment> findParentComments(@Param("review") Review review, @Param("cursor") Long cursor,
                                      Pageable pageable);
 

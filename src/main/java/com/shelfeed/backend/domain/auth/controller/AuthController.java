@@ -6,7 +6,6 @@ import com.shelfeed.backend.domain.auth.service.AuthService;
 import com.shelfeed.backend.global.common.response.ApiResponse;
 import com.shelfeed.backend.global.jwt.JwtProvider;
 import com.shelfeed.backend.global.security.CustomUserDetails;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 

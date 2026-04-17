@@ -20,7 +20,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import static com.shelfeed.backend.domain.follow.entity.QFollow.follow;
 
 @Service
 @RequiredArgsConstructor
