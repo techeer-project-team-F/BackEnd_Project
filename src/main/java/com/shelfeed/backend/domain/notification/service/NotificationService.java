@@ -52,6 +52,18 @@ public class NotificationService {
         return NotificationListResponse.of(content, limit, nextCursor);
     }
 
+    @Transactional
+    public void markAsRead(Long memberUserId, Long notificationId) {
+        Notification notification = notificationRepository.findById(notificationId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOTIFICATION_NOT_FOUND));
+
+        if (!notification.getReceiver().getMemberUserId().equals(memberUserId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN);
+        }
+
+        notification.beReaded();
+    }
+
     private Long decodeCursor(String cursor) {
         if (cursor == null || cursor.isBlank()) return null;
 

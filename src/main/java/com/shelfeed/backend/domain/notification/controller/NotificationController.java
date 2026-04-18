@@ -6,6 +6,8 @@ import com.shelfeed.backend.global.common.response.ApiResponse;
 import com.shelfeed.backend.global.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -28,6 +30,17 @@ public class NotificationController {
         Long memberUserId = userDetails.getMember().getMemberUserId();
         return ApiResponse.success(200,
                 notificationService.getMyNotifications(memberUserId, cursor, limit));
+    }
+
+    // 알림 읽음 처리  PATCH /api/v1/notifications/{notificationId}/read
+    @PatchMapping("/{notificationId}/read")
+    public ApiResponse<Void> markAsRead(
+            @PathVariable Long notificationId,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        Long memberUserId = userDetails.getMember().getMemberUserId();
+        notificationService.markAsRead(memberUserId, notificationId);
+        return ApiResponse.success(200, "알림을 읽음 처리했습니다.");
     }
 }
 
