@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/notifications")
 @RequiredArgsConstructor
-+@Validated
+@Validated
 public class NotificationController {
 
     private final NotificationService notificationService;
@@ -28,7 +28,7 @@ public class NotificationController {
     @GetMapping
     public ApiResponse<NotificationListResponse> getMyNotifications(
             @RequestParam(required = false) String cursor,
-            @RequestParam`(defaultValue = "20") `@Min`(1) int limit,
+            @RequestParam(defaultValue = "20") @Min(1) int limit,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         Long memberUserId = userDetails.getMember().getMemberUserId();
@@ -39,7 +39,7 @@ public class NotificationController {
     // 알림 읽음 처리  PATCH /api/v1/notifications/{notificationId}/read
     @PatchMapping("/{notificationId}/read")
     public ApiResponse<Void> markAsRead(
-            @PathVariable Long notificationId,
+            @PathVariable @Positive(message = "유효하지 않은 알림 ID입니다.") Long notificationId,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         Long memberUserId = userDetails.getMember().getMemberUserId();
