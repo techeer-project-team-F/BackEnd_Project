@@ -82,8 +82,9 @@ public class MemberService {
         Member member = memberRepository.findByMemberUserId(memberUserId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
 
-        List<Genre> genres = genreRepository.findAllById(request.getGenreIds());
-        if (genres.size() != request.getGenreIds().size()) {
+        List<Long> requestedGenreIds = request.getGenreIds().stream().distinct().toList();
++       List<Genre> genres = genreRepository.findAllById(requestedGenreIds);
++       if (genres.size() != requestedGenreIds.size()) {
             throw new BusinessException(ErrorCode.GENRE_NOT_FOUND);
         }
 
