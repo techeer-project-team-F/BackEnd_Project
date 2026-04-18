@@ -57,10 +57,12 @@ public class ReviewService {
         if (reviewRepository.existsByMemberAndBook_BookIdAndIsDeletedFalse(member, request.getBookId())){
             throw new BusinessException(ErrorCode.DUPLICATE_REVIEW);
         }
-        //빈값을 보낼 때 DB에 책이 없을 때 null 값
+        // 서재 도서 소유자 검증 (IDOR 보안 취약점 해결)
         LibraryBook libraryBook = null;
         if (request.getLibraryBookId() != null) {
-            libraryBook = libraryRepository.findById(request.getLibraryBookId()).orElse(null);
+            libraryBook = libraryRepository
+                    .findByLibraryBookIdAndMemberId(request.getLibraryBookId(), member)
+                    .orElseThrow(() -> new BusinessException(ErrorCode.LIBRARY_BOOK_NOT_FOUND));
         }
         //감상 저장
         Review review = Review.create(member, book, libraryBook, request.getRating(), request.getContent(), request.getQuote(),
@@ -71,7 +73,7 @@ public class ReviewService {
         List<String> tagNames = saveTags(review, request.getTags());
         //요청상태가 계시된 상태라면 리뷰 카운트 1 up
         if (request.getReviewStatus() == ReviewStatus.PUBLISHED) {
-            member.increaseReviewCount();
+            memberRepository.increaseReviewCount(memberUserId);
         }
         return ReviewCreateResponse.of(review, tagNames);
     }
@@ -105,7 +107,7 @@ public class ReviewService {
         boolean wasPublished = review.getReviewStatus() == ReviewStatus.PUBLISHED;
         boolean willPublish = request.getReviewStatus() == ReviewStatus.PUBLISHED;
         if (!wasPublished && willPublish){
-            review.getMember().increaseReviewCount();
+            memberRepository.increaseReviewCount(review.getMember().getMemberUserId());
         }
         //업데이트
         review.update(
@@ -129,7 +131,7 @@ public class ReviewService {
         review.softDelect();//삭제
         //PUBLISHED 였으면 리뷰 카운트 감소
         if (review.getReviewStatus() == ReviewStatus.PUBLISHED){
-            review.getMember().decreaseReviewCount();
+            memberRepository.decreaseReviewCount(review.getMember().getMemberUserId());
         }
         feedRepository.deleteByReview(review);
     }
@@ -171,7 +173,7 @@ public class ReviewService {
             throw new BusinessException(ErrorCode.ALREADY_REVIEW_LIKED);
         }
         reviewLikeRepository.save(ReviewLike.create(review,member));// 저장
-        review.increaseLikeCount();
+        reviewRepository.increaseLikeCount(review.getReviewId());
         return ReviewLikeResponse.of(review);
     }
     //8. 감상 좋아요 취소
@@ -182,7 +184,7 @@ public class ReviewService {
                 .orElseThrow(()-> new BusinessException(ErrorCode.REVIEW_LIKE_NOT_FOUND));// 좋아요 확인
 
         reviewLikeRepository.delete(like);
-        review.decreaseLikeCount();
+        reviewRepository.decreaseLikeCount(review.getReviewId());
         return ReviewLikeResponse.of(review);
     }
 

@@ -46,8 +46,8 @@ public class FollowService {
 
         Follow follow = followRepository.save(Follow.create(follower,followee));
         // 카운트 업데이트
-        follower.increaseFollowingCount();
-        followee.increaseFollowerCount();
+        memberRepository.increaseFollowingCount(follower.getMemberUserId());
+        memberRepository.increaseFollowerCount(followee.getMemberUserId());
         return FollowResponse.of(follow,follower);
     }
     //2.언팔로우
@@ -60,8 +60,8 @@ public class FollowService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.FOLLOW_NOT_FOUND));
         followRepository.delete(follow);
         // 카운트 업데이트
-        follower.decreaseFollowingCount();
-        followee.decreaseFollowerCount();
+        memberRepository.decreaseFollowingCount(follower.getMemberUserId());
+        memberRepository.decreaseFollowerCount(followee.getMemberUserId());
         //엔팔한 멤버의 피드 내 피드화면에서 제거
         feedRepository.deleteByMemberAndReview_Member(follower,followee);
 

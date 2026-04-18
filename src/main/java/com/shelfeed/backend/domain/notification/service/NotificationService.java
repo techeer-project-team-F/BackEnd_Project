@@ -31,8 +31,8 @@ public class NotificationService {
 
     public NotificationListResponse getMyNotifications(Long memberUserId, String cursor, int limit) {
          if (limit <= 0) {
-+            throw new BusinessException(ErrorCode.INVALID_INPUT);
-+        }
+            throw new BusinessException(ErrorCode.INVALID_INPUT);
+        }
         Member receiver = memberRepository.findByMemberUserId(memberUserId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
 

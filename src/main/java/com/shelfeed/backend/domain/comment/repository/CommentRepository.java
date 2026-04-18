@@ -4,8 +4,10 @@ import com.shelfeed.backend.domain.comment.entity.Comment;
 import com.shelfeed.backend.domain.review.entity.Review;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -34,4 +36,14 @@ public interface CommentRepository extends JpaRepository<Comment,Long> {
 
     // 감상 삭제 시 댓들 모두 소프트 델리트 용도로 사용
     List<Comment> findByReview (Review review);
+
+    @Modifying(clearAutomatically = true)
+    @Transactional
+    @Query("UPDATE Comment c SET c.likeCount = c.likeCount + 1 WHERE c.commentId = :id")
+    void increaseLikeCount(@Param("id") Long id);
+
+    @Modifying(clearAutomatically = true)
+    @Transactional
+    @Query("UPDATE Comment c SET c.likeCount = c.likeCount - 1 WHERE c.commentId = :id AND c.likeCount > 0")
+    void decreaseLikeCount(@Param("id") Long id);
 }

@@ -114,12 +114,6 @@ public class Member extends BaseTimeEntity {
     public void completeOnboarding() { this.onboardingCompleted = true; }
     public void recordLogin() { this.lastLoginAt = LocalDateTime.now(); }
     public void changePassword(String encodedPassword) {this.password = encodedPassword;}
-    public void increaseFollowerCount()  { this.followerCount++; }
-    public void decreaseFollowerCount()  { if (this.followerCount > 0) this.followerCount--; }
-    public void increaseFollowingCount() { this.followingCount++; }
-    public void decreaseFollowingCount() { if (this.followingCount > 0) this.followingCount--; }
-    public void increaseReviewCount() { this.reviewCount++; }
-    public void decreaseReviewCount() { if (this.reviewCount > 0) this.reviewCount--; }
     public void withdraw() {
         this.status = MemberStatus.WITHDRAWN;
         this.withdrawnAt = LocalDateTime.now();
