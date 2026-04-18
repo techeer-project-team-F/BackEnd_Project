@@ -30,7 +30,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
+@Transactional(readOnly = true)
 public class MemberService {
 
     private final MemberRepository memberRepository;
@@ -41,6 +41,7 @@ public class MemberService {
     private final JwtProvider jwtProvider;
 
     // ── 1. 온보딩
+    @Transactional
     public OnboardingResponse completeOnboarding(Long memberUserId, OnboardingRequest request) {
         Member member = memberRepository.findByMemberUserId(memberUserId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
@@ -54,50 +55,56 @@ public class MemberService {
             throw new BusinessException(ErrorCode.NICKNAME_ALREADY_EXISTS);
         }
 
-        List<Long> requestedGenreIds = request.getGenreIds().stream().distinct().toList();
-
-        List<Genre> genres = genreRepository.findAllById(requestedGenreIds);
-
-        if (genres.size() != requestedGenreIds.size()) {
-            throw new BusinessException(ErrorCode.GENRE_NOT_FOUND);
-        }
+       List<Genre> genres = getValidatedGenres(request.getGenreIds());
 
         member.onboard(request.getNickname(), request.getBio(), request.getProfileImageUrl());
-
         memberGenreRepository.deleteAllByMember(member);
-
 
         List<MemberGenre> memberGenres = genres.stream()
                 .map(genre -> MemberGenre.create(member, genre))
                 .toList();
 
-        // 2. saveAll()을 호출하여 한 번에 저장 (N번의 save 호출 방지)
         memberGenreRepository.saveAll(memberGenres);
-
         member.completeOnboarding();
 
         return OnboardingResponse.of(member, genres);
     }
 
     // ── 1-1. 관심 장르 설정/수정
+    @Transactional
     public UpdateGenresResponse updateMyGenres(Long memberUserId, UpdateGenresRequest request) {
-        Member member = memberRepository.findByMemberUserId(memberUserId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+    Member member = memberRepository.findByMemberUserId(memberUserId)
+            .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
 
-        List<Long> requestedGenreIds = request.getGenreIds().stream().distinct().toList();
-+       List<Genre> genres = genreRepository.findAllById(requestedGenreIds);
-+       if (genres.size() != requestedGenreIds.size()) {
-            throw new BusinessException(ErrorCode.GENRE_NOT_FOUND);
-        }
+    // 헬퍼 메서드 호출로 중복 제거
+    List<Genre> genres = getValidatedGenres(request.getGenreIds());
 
-        memberGenreRepository.deleteAllByMember(member);
-        List<MemberGenre> memberGenres = genres.stream()
-                .map(genre -> MemberGenre.create(member, genre))
-                .toList();
-        memberGenreRepository.saveAll(memberGenres);
+    memberGenreRepository.deleteAllByMember(member);
+    
+    List<MemberGenre> memberGenres = genres.stream()
+            .map(genre -> MemberGenre.create(member, genre))
+            .toList();
+    memberGenreRepository.saveAll(memberGenres);
 
-        return UpdateGenresResponse.of(genres);
+    return UpdateGenresResponse.of(genres);
+}
+
+private List<Genre> getValidatedGenres(List<Long> genreIds) {
+    // 1. 요청된 ID들의 중복 제거 
+    List<Long> distinctIds = genreIds.stream()
+            .distinct()
+            .toList();
+
+    // 2. DB에서 한꺼번에 조회
+    List<Genre> genres = genreRepository.findAllById(distinctIds);
+
+    // 3. 조회된 개수와 요청된 개수가 다르면 예외 발생
+    if (genres.size() != distinctIds.size()) {
+        throw new BusinessException(ErrorCode.GENRE_NOT_FOUND);
     }
+
+    return genres;
+}
 
     // ── 2. 내 프로필 조회
     @Transactional(readOnly = true)
@@ -107,6 +114,7 @@ public class MemberService {
         return MyProfileResponse.of(member);
     }
     // ── 3. 프로필 수정
+    @Transactional
     public UpdateProfileResponse updateProfile(Long memberUserId, UpdateProfileRequest request){
         Member member = memberRepository.findByMemberUserId(memberUserId)
                 .orElseThrow(()-> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
@@ -119,7 +127,6 @@ public class MemberService {
         return UpdateProfileResponse.of(member);
     }
     // ── 4. 타 유저 프로필 조회
-    @Transactional(readOnly = true)
     public UserProfileResponse getUserProfile(Long targetUserId){
         Member member = memberRepository.findByMemberUserId(targetUserId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
@@ -130,6 +137,7 @@ public class MemberService {
         return UserProfileResponse.of(member);
     }
     // ── 5. 비밀번호 변경
+    @Transactional
     public NewTokenPair changePassword(Long memberUserId, ChangePasswordRequest request){
         Member member = memberRepository.findByMemberUserId(memberUserId)
                 .orElseThrow(()-> new BusinessException(ErrorCode.NO_PASSWORD_ACCOUNT));
@@ -159,6 +167,7 @@ public class MemberService {
     public record NewTokenPair(String accessToken, String refreshToken, long accessTokenExpiresIn) {}
 
     // ── 6. 회원 탈퇴
+    @Transactional
     public void withdraw(Long memberUserId, String accessToken, WithdrawRequest request){
         Member member = memberRepository.findByMemberUserId(memberUserId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
