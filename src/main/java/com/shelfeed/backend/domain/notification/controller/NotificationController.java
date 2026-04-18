@@ -13,10 +13,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
++import jakarta.validation.constraints.Min;
++import org.springframework.validation.annotation.Validated;
 
 @RestController
 @RequestMapping("/api/v1/notifications")
 @RequiredArgsConstructor
++@Validated
 public class NotificationController {
 
     private final NotificationService notificationService;
@@ -25,7 +28,7 @@ public class NotificationController {
     @GetMapping
     public ApiResponse<NotificationListResponse> getMyNotifications(
             @RequestParam(required = false) String cursor,
-            @RequestParam(defaultValue = "20") int limit,
+            @RequestParam`(defaultValue = "20") `@Min`(1) int limit,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         Long memberUserId = userDetails.getMember().getMemberUserId();

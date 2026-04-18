@@ -23,7 +23,7 @@ public class NotificationListResponse {
                 .content(result)
                 .nextCursor(hasNext ? nextCursor : null)
                 .hasNext(hasNext)
-                .size(limit) // 요청된 페이지 크기
+                .size(result.size())
                 .build();
     }
 }
