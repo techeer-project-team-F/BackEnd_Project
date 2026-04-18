@@ -2,10 +2,12 @@ package com.shelfeed.backend.domain.member.controller;
 
 import com.shelfeed.backend.domain.member.dto.request.ChangePasswordRequest;
 import com.shelfeed.backend.domain.member.dto.request.OnboardingRequest;
+import com.shelfeed.backend.domain.member.dto.request.UpdateGenresRequest;
 import com.shelfeed.backend.domain.member.dto.request.UpdateProfileRequest;
 import com.shelfeed.backend.domain.member.dto.request.WithdrawRequest;
 import com.shelfeed.backend.domain.member.dto.response.MyProfileResponse;
 import com.shelfeed.backend.domain.member.dto.response.OnboardingResponse;
+import com.shelfeed.backend.domain.member.dto.response.UpdateGenresResponse;
 import com.shelfeed.backend.domain.member.dto.response.UpdateProfileResponse;
 import com.shelfeed.backend.domain.member.dto.response.UserProfileResponse;
 import com.shelfeed.backend.domain.member.service.MemberService;
@@ -38,12 +40,21 @@ public class MemberController {
                 memberService.completeOnboarding(userDetails.getMember().getMemberUserId(), request));
     }
 
+    // 1-1. 관심 장르 설정/수정  PUT /api/v1/users/me/genres
+    @PutMapping("/me/genres")
+    public ApiResponse<UpdateGenresResponse> updateMyGenres(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Valid @RequestBody UpdateGenresRequest request) {
+        return ApiResponse.success(200, "관심 장르가 설정되었습니다.",
+                memberService.updateMyGenres(userDetails.getMember().getMemberUserId(), request));
+    }
+
     // 2. 내 프로필 조회  GET /api/v1/users/me
     @GetMapping("/me")
     public ApiResponse<MyProfileResponse> getMyProfile(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         return ApiResponse.success(200,
-                memberService.getMyProfile(userDetails.getMember().getMemberUserId()));
+                memberService.getMyProfile(userDetails.getMember().getMemberUserId())); 
     }
 
     // 3. 프로필 수정  PATCH /api/v1/users/me

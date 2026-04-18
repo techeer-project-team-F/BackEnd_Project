@@ -1,7 +1,6 @@
 package com.shelfeed.backend.domain.member.dto.response;
 
 import com.shelfeed.backend.domain.genre.entity.Genre;
-import com.shelfeed.backend.domain.member.entity.Member;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -9,13 +8,7 @@ import java.util.List;
 
 @Getter
 @Builder
-public class OnboardingResponse {
-
-    private Long userId;
-    private String nickname;
-    private String profileImageUrl;
-    private String bio;
-    private boolean onboardingCompleted;
+public class UpdateGenresResponse {
     private List<GenreInfo> genres;
 
     @Getter
@@ -32,14 +25,10 @@ public class OnboardingResponse {
         }
     }
 
-    public static OnboardingResponse of(Member member, List<Genre> genres) {
-        return OnboardingResponse.builder()
-                .userId(member.getMemberUserId())
-                .nickname(member.getNickname())
-                .profileImageUrl(member.getProfileImageUrl())
-                .bio(member.getBio())
-                .onboardingCompleted(member.isOnboardingCompleted())
+    public static UpdateGenresResponse of(List<Genre> genres) {
+        return UpdateGenresResponse.builder()
                 .genres(genres.stream().map(GenreInfo::of).toList())
                 .build();
     }
 }
+

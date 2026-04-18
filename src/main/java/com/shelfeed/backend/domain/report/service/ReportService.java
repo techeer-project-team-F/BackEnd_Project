@@ -19,7 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
+@Transactional(readOnly = true)
 public class ReportService {
 
     private final MemberRepository memberRepository;
@@ -27,6 +27,7 @@ public class ReportService {
     private final CommentRepository commentRepository;
     private final ReportRepository reportRepository;
 
+@Transactional
     public CreateReportResponse createReport(Long memberUserId, CreateReportRequest request) {
         Member reporter = memberRepository.findByMemberUserId(memberUserId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));

@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @Builder
-public class CreateReportResponse {
+public class ReportResponse {
     private Long reportId;
     private ReportTargetType targetType;
     private Long targetId;

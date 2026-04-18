@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Getter;
 
 @Getter
-public class CreateReportRequest {
+public class ReportRequest {
 
     @NotNull(message = "targetType은 필수입니다.")
     private ReportTargetType targetType;

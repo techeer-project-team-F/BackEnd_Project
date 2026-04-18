@@ -6,10 +6,12 @@ import com.shelfeed.backend.domain.genre.repository.GenreRepository;
 import com.shelfeed.backend.domain.genre.repository.MemberGenreRepository;
 import com.shelfeed.backend.domain.member.dto.request.ChangePasswordRequest;
 import com.shelfeed.backend.domain.member.dto.request.OnboardingRequest;
+import com.shelfeed.backend.domain.member.dto.request.UpdateGenresRequest;
 import com.shelfeed.backend.domain.member.dto.request.UpdateProfileRequest;
 import com.shelfeed.backend.domain.member.dto.request.WithdrawRequest;
 import com.shelfeed.backend.domain.member.dto.response.MyProfileResponse;
 import com.shelfeed.backend.domain.member.dto.response.OnboardingResponse;
+import com.shelfeed.backend.domain.member.dto.response.UpdateGenresResponse;
 import com.shelfeed.backend.domain.member.dto.response.UpdateProfileResponse;
 import com.shelfeed.backend.domain.member.dto.response.UserProfileResponse;
 import com.shelfeed.backend.domain.member.entity.Member;
@@ -53,7 +55,11 @@ public class MemberService {
         }
 
         List<Long> requestedGenreIds = request.getGenreIds().stream().distinct().toList();
+<<<<<<< HEAD
 +        List<Genre> genres = genreRepository.findAllById(requestedGenreIds);
+=======
++       List<Genre> genres = genreRepository.findAllById(requestedGenreIds);
+>>>>>>> 9a9c879806260f81600ae3bd5cf374bf751460a6
 +        if (genres.size() != requestedGenreIds.size()) {
             throw new BusinessException(ErrorCode.GENRE_NOT_FOUND);
         }
@@ -73,6 +79,26 @@ public class MemberService {
         member.completeOnboarding();
 
         return OnboardingResponse.of(member, genres);
+    }
+
+    // ── 1-1. 관심 장르 설정/수정
+    public UpdateGenresResponse updateMyGenres(Long memberUserId, UpdateGenresRequest request) {
+        Member member = memberRepository.findByMemberUserId(memberUserId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+
+        List<Long> requestedGenreIds = request.getGenreIds().stream().distinct().toList();
++       List<Genre> genres = genreRepository.findAllById(requestedGenreIds);
++       if (genres.size() != requestedGenreIds.size()) {
+            throw new BusinessException(ErrorCode.GENRE_NOT_FOUND);
+        }
+
+        memberGenreRepository.deleteAllByMember(member);
+        List<MemberGenre> memberGenres = genres.stream()
+                .map(genre -> MemberGenre.create(member, genre))
+                .toList();
+        memberGenreRepository.saveAll(memberGenres);
+
+        return UpdateGenresResponse.of(genres);
     }
 
     // ── 2. 내 프로필 조회
