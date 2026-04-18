@@ -146,7 +146,8 @@ public class CommentService {
         }
         commentLikeRepository.save(CommentLike.create(member, comment));
         commentRepository.increaseLikeCount(comment.getCommentId());
-        return CommentLikeResponse.of(comment);
+        Comment updatedComment = getComment(commentId);
+        return CommentLikeResponse.of(updatedComment);
     }
 
     // 6. 댓글 좋아요 취소
@@ -160,7 +161,8 @@ public class CommentService {
                 .orElseThrow(()->new BusinessException(ErrorCode.COMMENT_LIKE_NOT_FOUND));
         commentLikeRepository.delete(commentLike);
         commentRepository.decreaseLikeCount(comment.getCommentId());
-        return CommentLikeResponse.of(comment);
+        Comment updatedComment = getComment(commentId);
+        return CommentLikeResponse.of(updatedComment);
     }
 
 
