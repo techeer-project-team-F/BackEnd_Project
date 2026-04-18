@@ -30,7 +30,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
+@Transactional(readOnly = true)
 public class MemberService {
 
     private final MemberRepository memberRepository;
@@ -41,6 +41,7 @@ public class MemberService {
     private final JwtProvider jwtProvider;
 
     // ── 1. 온보딩
+    @Transactional
     public OnboardingResponse completeOnboarding(Long memberUserId, OnboardingRequest request) {
         Member member = memberRepository.findByMemberUserId(memberUserId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
@@ -71,7 +72,7 @@ public class MemberService {
 
     // ── 1-1. 관심 장르 설정/수정
     @Transactional
-public UpdateGenresResponse updateMyGenres(Long memberUserId, UpdateGenresRequest request) {
+    public UpdateGenresResponse updateMyGenres(Long memberUserId, UpdateGenresRequest request) {
     Member member = memberRepository.findByMemberUserId(memberUserId)
             .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
 
@@ -113,6 +114,7 @@ private List<Genre> getValidatedGenres(List<Long> genreIds) {
         return MyProfileResponse.of(member);
     }
     // ── 3. 프로필 수정
+    @Transactional
     public UpdateProfileResponse updateProfile(Long memberUserId, UpdateProfileRequest request){
         Member member = memberRepository.findByMemberUserId(memberUserId)
                 .orElseThrow(()-> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
@@ -125,7 +127,6 @@ private List<Genre> getValidatedGenres(List<Long> genreIds) {
         return UpdateProfileResponse.of(member);
     }
     // ── 4. 타 유저 프로필 조회
-    @Transactional(readOnly = true)
     public UserProfileResponse getUserProfile(Long targetUserId){
         Member member = memberRepository.findByMemberUserId(targetUserId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
@@ -136,6 +137,7 @@ private List<Genre> getValidatedGenres(List<Long> genreIds) {
         return UserProfileResponse.of(member);
     }
     // ── 5. 비밀번호 변경
+    @Transactional
     public NewTokenPair changePassword(Long memberUserId, ChangePasswordRequest request){
         Member member = memberRepository.findByMemberUserId(memberUserId)
                 .orElseThrow(()-> new BusinessException(ErrorCode.NO_PASSWORD_ACCOUNT));
@@ -165,6 +167,7 @@ private List<Genre> getValidatedGenres(List<Long> genreIds) {
     public record NewTokenPair(String accessToken, String refreshToken, long accessTokenExpiresIn) {}
 
     // ── 6. 회원 탈퇴
+    @Transactional
     public void withdraw(Long memberUserId, String accessToken, WithdrawRequest request){
         Member member = memberRepository.findByMemberUserId(memberUserId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));

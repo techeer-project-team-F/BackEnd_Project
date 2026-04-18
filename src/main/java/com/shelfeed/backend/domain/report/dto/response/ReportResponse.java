@@ -18,7 +18,7 @@ public class ReportResponse {
     private LocalDateTime createdAt;
 
     public static ReportResponse of(Report report, ReportTargetType targetType, Long targetId) {
-        return CreateReportResponse.builder()
+        return ReportResponse.builder()
                 .reportId(report.getReportId())
                 .targetType(targetType)
                 .targetId(targetId)
