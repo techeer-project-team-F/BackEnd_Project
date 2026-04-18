@@ -3,8 +3,10 @@ package com.shelfeed.backend.domain.member.repository;
 import com.shelfeed.backend.domain.member.entity.Member;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -24,4 +26,34 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     List<Member> searchMembers(@Param("query") String query,
                                @Param("cursor") Long cursor,
                                Pageable pageable);
+
+    @Modifying(clearAutomatically = true)
+    @Transactional
+    @Query("UPDATE Member m SET m.followerCount = m.followerCount + 1 WHERE m.memberUserId = :id")
+    void increaseFollowerCount(@Param("id") Long id);
+
+    @Modifying(clearAutomatically = true)
+    @Transactional
+    @Query("UPDATE Member m SET m.followerCount = m.followerCount - 1 WHERE m.memberUserId = :id AND m.followerCount > 0")
+    void decreaseFollowerCount(@Param("id") Long id);
+
+    @Modifying(clearAutomatically = true)
+    @Transactional
+    @Query("UPDATE Member m SET m.followingCount = m.followingCount + 1 WHERE m.memberUserId = :id")
+    void increaseFollowingCount(@Param("id") Long id);
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE Member m SET m.followingCount = m.followingCount - 1 WHERE m.memberUserId = :id AND m.followingCount > 0")
+    void decreaseFollowingCount(@Param("id") Long id);
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE Member m SET m.reviewCount = m.reviewCount + 1 WHERE m.memberUserId = :id")
+    void increaseReviewCount(@Param("id") Long id);
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE Member m SET m.reviewCount = m.reviewCount - 1 WHERE m.memberUserId = :id AND m.reviewCount > 0")
+    void decreaseReviewCount(@Param("id") Long id);
 }

@@ -53,7 +53,7 @@ public class CommentService {
             comment = Comment.createReply(review,member,parentComment,request.getContent());// 대댓글 작성
         }
         commentRepository.save(comment);
-        review.increaseCommentCount();
+        reviewRepository.increaseCommentCount(review.getReviewId());
         return CommentCreateResponse.of(comment);
     }
 
@@ -128,7 +128,7 @@ public class CommentService {
             throw new BusinessException(ErrorCode.NOT_COMMENT_OWNER);
         }
         comment.softDelete();
-        comment.getReview().decreaseCommentCount();
+        reviewRepository.decreaseCommentCount(comment.getReview().getReviewId());
     }
     // 5. 댓글 좋아요
     @Transactional
@@ -145,7 +145,7 @@ public class CommentService {
             throw new BusinessException(ErrorCode.ALREADY_COMMENT_LIKED);
         }
         commentLikeRepository.save(CommentLike.create(member, comment));
-        comment.increaseLikeCount();
+        commentRepository.increaseLikeCount(comment.getCommentId());
         return CommentLikeResponse.of(comment);
     }
 
@@ -159,7 +159,7 @@ public class CommentService {
         CommentLike commentLike = commentLikeRepository.findByComment_CommentIdAndMember_MemberUserId(commentId,memberUserId)
                 .orElseThrow(()->new BusinessException(ErrorCode.COMMENT_LIKE_NOT_FOUND));
         commentLikeRepository.delete(commentLike);
-        comment.decreaseLikeCount();
+        commentRepository.decreaseLikeCount(comment.getCommentId());
         return CommentLikeResponse.of(comment);
     }
 
