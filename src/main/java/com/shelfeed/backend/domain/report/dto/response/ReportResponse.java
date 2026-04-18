@@ -17,7 +17,7 @@ public class ReportResponse {
     private ReportReason reason;
     private LocalDateTime createdAt;
 
-    public static CreateReportResponse of(Report report, ReportTargetType targetType, Long targetId) {
+    public static ReportResponse of(Report report, ReportTargetType targetType, Long targetId) {
         return CreateReportResponse.builder()
                 .reportId(report.getReportId())
                 .targetType(targetType)
