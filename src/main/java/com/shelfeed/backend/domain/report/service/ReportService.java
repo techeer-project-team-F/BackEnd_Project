@@ -4,8 +4,8 @@ import com.shelfeed.backend.domain.comment.entity.Comment;
 import com.shelfeed.backend.domain.comment.repository.CommentRepository;
 import com.shelfeed.backend.domain.member.entity.Member;
 import com.shelfeed.backend.domain.member.repository.MemberRepository;
-import com.shelfeed.backend.domain.report.dto.request.CreateReportRequest;
-import com.shelfeed.backend.domain.report.dto.response.CreateReportResponse;
+import com.shelfeed.backend.domain.report.dto.request.ReportRequest;
+import com.shelfeed.backend.domain.report.dto.response.ReportResponse;
 import com.shelfeed.backend.domain.report.entity.Report;
 import com.shelfeed.backend.domain.report.enums.ReportTargetType;
 import com.shelfeed.backend.domain.report.repository.ReportRepository;
@@ -28,7 +28,7 @@ public class ReportService {
     private final ReportRepository reportRepository;
 
 @Transactional
-    public CreateReportResponse createReport(Long memberUserId, CreateReportRequest request) {
+    public ReportResponse createReport(Long memberUserId, ReportRequest request) {
         Member reporter = memberRepository.findByMemberUserId(memberUserId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
 
@@ -41,10 +41,10 @@ public class ReportService {
         };
 
         Report saved = reportRepository.save(report);
-        return CreateReportResponse.of(saved, targetType, targetId);
+        return ReportResponse.of(saved, targetType, targetId);
     }
 
-    private Report createReviewReport(Member reporter, Long memberUserId, CreateReportRequest request) {
+    private Report createReviewReport(Member reporter, Long memberUserId, ReportRequest request) {
         Long reviewId = request.getTargetId();
 
         if (reportRepository.existsByMemberAndReviewId(reporter, reviewId)) {
@@ -61,7 +61,7 @@ public class ReportService {
         return Report.createReviewReport(reporter, reviewId, request.getReason(), request.getDescription());
     }
 
-    private Report createCommentReport(Member reporter, Long memberUserId, CreateReportRequest request) {
+    private Report createCommentReport(Member reporter, Long memberUserId, ReportRequest request) {
         Long commentId = request.getTargetId();
 
         if (reportRepository.existsByMemberAndCommentId(reporter, commentId)) {

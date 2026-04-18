@@ -1,7 +1,9 @@
 package com.shelfeed.backend.domain.report.controller;
 
 import com.shelfeed.backend.domain.report.dto.request.CreateReportRequest;
+import com.shelfeed.backend.domain.report.dto.request.ReportRequest;
 import com.shelfeed.backend.domain.report.dto.response.CreateReportResponse;
+import com.shelfeed.backend.domain.report.dto.response.ReportResponse;
 import com.shelfeed.backend.domain.report.service.ReportService;
 import com.shelfeed.backend.global.common.response.ApiResponse;
 import com.shelfeed.backend.global.security.CustomUserDetails;
@@ -23,10 +25,10 @@ public class ReportController {
     private final ReportService reportService;
 
     @PostMapping
-    `@ResponseStatus`(HttpStatus.CREATED)
-    public ApiResponse<CreateReportResponse> createReport(
+    @ResponseStatus(HttpStatus.CREATED)
+    public ApiResponse<ReportResponse> createReport(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @Valid @RequestBody CreateReportRequest request
+            @Valid @RequestBody ReportRequest request
     ) {
         Long memberUserId = userDetails.getMember().getMemberUserId();
         return ApiResponse.success(201, "신고가 접수되었습니다.",

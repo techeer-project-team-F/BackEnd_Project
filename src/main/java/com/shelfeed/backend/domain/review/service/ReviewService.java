@@ -57,10 +57,12 @@ public class ReviewService {
         if (reviewRepository.existsByMemberAndBook_BookIdAndIsDeletedFalse(member, request.getBookId())){
             throw new BusinessException(ErrorCode.DUPLICATE_REVIEW);
         }
-        //빈값을 보낼 때 DB에 책이 없을 때 null 값
+        // 서재 도서 소유자 검증 (IDOR 보안 취약점 해결)
         LibraryBook libraryBook = null;
         if (request.getLibraryBookId() != null) {
-            libraryBook = libraryRepository.findById(request.getLibraryBookId()).orElse(null);
+            libraryBook = libraryRepository
+                    .findByLibraryBookIdAndMemberId(request.getLibraryBookId(), member)
+                    .orElseThrow(() -> new BusinessException(ErrorCode.LIBRARY_BOOK_NOT_FOUND));
         }
         //감상 저장
         Review review = Review.create(member, book, libraryBook, request.getRating(), request.getContent(), request.getQuote(),
