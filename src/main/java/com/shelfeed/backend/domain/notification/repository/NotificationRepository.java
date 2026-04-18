@@ -22,5 +22,13 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     List<Notification> findMyNotifications(@Param("receiver") Member receiver,
                                            @Param("cursor") Long cursor,
                                            Pageable pageable);
+
+    @Query("""
+            SELECT COUNT(n) FROM Notification n
+            WHERE n.receiver = :receiver
+              AND n.isDeleted = false
+              AND n.isRead = false
+            """)
+    long countUnread(@Param("receiver") Member receiver);
 }
 

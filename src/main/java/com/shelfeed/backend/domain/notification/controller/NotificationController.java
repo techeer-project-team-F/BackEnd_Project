@@ -1,6 +1,7 @@
 package com.shelfeed.backend.domain.notification.controller;
 
 import com.shelfeed.backend.domain.notification.dto.response.NotificationListResponse;
+import com.shelfeed.backend.domain.notification.dto.response.UnreadCountResponse;
 import com.shelfeed.backend.domain.notification.service.NotificationService;
 import com.shelfeed.backend.global.common.response.ApiResponse;
 import com.shelfeed.backend.global.security.CustomUserDetails;
@@ -41,6 +42,15 @@ public class NotificationController {
         Long memberUserId = userDetails.getMember().getMemberUserId();
         notificationService.markAsRead(memberUserId, notificationId);
         return ApiResponse.success(200, "알림을 읽음 처리했습니다.");
+    }
+
+    // 미읽음 알림 개수 조회  GET /api/v1/notifications/unread-count
+    @GetMapping("/unread-count")
+    public ApiResponse<UnreadCountResponse> getUnreadCount(
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        Long memberUserId = userDetails.getMember().getMemberUserId();
+        return ApiResponse.success(200, notificationService.getUnreadCount(memberUserId));
     }
 }
 

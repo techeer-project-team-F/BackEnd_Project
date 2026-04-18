@@ -6,6 +6,7 @@ import com.shelfeed.backend.domain.member.entity.Member;
 import com.shelfeed.backend.domain.member.repository.MemberRepository;
 import com.shelfeed.backend.domain.notification.dto.response.NotificationItemResponse;
 import com.shelfeed.backend.domain.notification.dto.response.NotificationListResponse;
+import com.shelfeed.backend.domain.notification.dto.response.UnreadCountResponse;
 import com.shelfeed.backend.domain.notification.entity.Notification;
 import com.shelfeed.backend.domain.notification.repository.NotificationRepository;
 import com.shelfeed.backend.global.common.exception.BusinessException;
@@ -62,6 +63,14 @@ public class NotificationService {
         }
 
         notification.beReaded();
+    }
+
+    public UnreadCountResponse getUnreadCount(Long memberUserId) {
+        Member receiver = memberRepository.findByMemberUserId(memberUserId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+
+        long unreadCount = notificationRepository.countUnread(receiver);
+        return UnreadCountResponse.of(unreadCount);
     }
 
     private Long decodeCursor(String cursor) {
