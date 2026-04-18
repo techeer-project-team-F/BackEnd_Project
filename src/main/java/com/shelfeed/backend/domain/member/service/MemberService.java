@@ -55,12 +55,10 @@ public class MemberService {
         }
 
         List<Long> requestedGenreIds = request.getGenreIds().stream().distinct().toList();
-<<<<<<< HEAD
-+        List<Genre> genres = genreRepository.findAllById(requestedGenreIds);
-=======
-+       List<Genre> genres = genreRepository.findAllById(requestedGenreIds);
->>>>>>> 9a9c879806260f81600ae3bd5cf374bf751460a6
-+        if (genres.size() != requestedGenreIds.size()) {
+
+        List<Genre> genres = genreRepository.findAllById(requestedGenreIds);
+
+        if (genres.size() != requestedGenreIds.size()) {
             throw new BusinessException(ErrorCode.GENRE_NOT_FOUND);
         }
 

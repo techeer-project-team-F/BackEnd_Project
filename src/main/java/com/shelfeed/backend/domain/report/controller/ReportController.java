@@ -23,7 +23,7 @@ public class ReportController {
     private final ReportService reportService;
 
     @PostMapping
-    @ResponseStatus`(HttpStatus.CREATED)
+    `@ResponseStatus`(HttpStatus.CREATED)
     public ApiResponse<CreateReportResponse> createReport(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody CreateReportRequest request
