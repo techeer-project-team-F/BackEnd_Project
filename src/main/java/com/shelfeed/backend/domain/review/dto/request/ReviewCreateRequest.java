@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
 import java.util.List;
@@ -27,6 +28,7 @@ public class ReviewCreateRequest {
 
     private Integer readPages;
 
+    @JsonProperty("isSpoiler")
     private boolean isSpoiler;
 
     @NotNull(message = "공개 범위는 필수입니다.")
