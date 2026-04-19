@@ -101,6 +101,7 @@ class FollowServiceTest {
             FollowResponse response = followService.follow(2L, 1L);
 
             assertThat(response.getFollowingUserId()).isEqualTo(2L);
+            verify(followRepository).save(any());
             verify(memberRepository).increaseFollowingCount(1L); // 내 팔로잉 +1
             verify(memberRepository).increaseFollowerCount(2L);  // 상대 팔로워 +1
         }
