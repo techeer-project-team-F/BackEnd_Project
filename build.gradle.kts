@@ -15,6 +15,7 @@ java {
 
 configurations {
     compileOnly { extendsFrom(configurations.annotationProcessor.get()) }
+    create("mockitoAgent")
 }
 
 repositories {
@@ -69,10 +70,12 @@ dependencies {
     testImplementation("org.springframework.security:spring-security-test")
     testImplementation("org.testcontainers:mysql:1.20.4")
     testImplementation("org.testcontainers:junit-jupiter:1.20.4")
+    add("mockitoAgent", "org.mockito:mockito-core") { isTransitive = false }
 }
 
 tasks.withType<Test> {
     useJUnitPlatform()
+    jvmArgs("-javaagent:${configurations["mockitoAgent"].asPath}")
 }
 
 // QueryDSL Q클래스 생성 경로

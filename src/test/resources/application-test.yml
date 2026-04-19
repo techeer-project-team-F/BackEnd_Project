@@ -1,0 +1,40 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        generate_statistics: true   # N+1 감지용
+
+  data:
+    redis:
+      host: localhost
+      port: 6379                    # docker-compose redis 사용
+
+  cloud:
+    aws:
+      region:
+        static: ap-northeast-2
+      credentials:
+        access-key: test
+        secret-key: test
+      s3:
+        bucket: test-bucket
+
+jwt:
+  secret: test-secret-key-for-shelfeed-testing-purposes-only
+  access-expiration: 3600000
+  refresh-expiration: 604800000
+
+aladin:
+  api:
+    ttbkey: test-key
+    version: "20131101"
+
+oauth2:
+  google:
+    client-id: test-client-id
+    client-secret: test-client-secret
+    redirect-uri: http://localhost:5173/auth/callback/google

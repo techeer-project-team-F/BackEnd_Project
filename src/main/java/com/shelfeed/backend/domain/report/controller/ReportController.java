@@ -1,8 +1,6 @@
 package com.shelfeed.backend.domain.report.controller;
 
-import com.shelfeed.backend.domain.report.dto.request.CreateReportRequest;
 import com.shelfeed.backend.domain.report.dto.request.ReportRequest;
-import com.shelfeed.backend.domain.report.dto.response.CreateReportResponse;
 import com.shelfeed.backend.domain.report.dto.response.ReportResponse;
 import com.shelfeed.backend.domain.report.service.ReportService;
 import com.shelfeed.backend.global.common.response.ApiResponse;
