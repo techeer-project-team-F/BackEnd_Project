@@ -146,7 +146,7 @@ class FollowServiceTest {
         }
 
         @Test
-        @DisplayName("언팔로우 시 팔로위의 피드에서 팔로워의 게시물이 제거된다")
+        @DisplayName("언팔로우 시 팔로워의 피드에서 팔로위의 게시물이 제거된다")
         void 언팔로우_피드_제거() {
             com.shelfeed.backend.domain.follow.entity.Follow follow =
                     com.shelfeed.backend.domain.follow.entity.Follow.create(follower, followee);
