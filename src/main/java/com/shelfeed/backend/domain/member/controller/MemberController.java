@@ -20,6 +20,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -35,10 +36,11 @@ public class MemberController {
     private final JwtProvider jwtProvider;
     // 1. 온보딩  POST /api/v1/users/me/onboarding
     @PostMapping("/me/onboarding")
+    @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<OnboardingResponse> completeOnboarding(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody OnboardingRequest request) {
-        return ApiResponse.success(200, "온보딩이 완료되었습니다.",
+        return ApiResponse.success(201, "온보딩이 완료되었습니다.",
                 memberService.completeOnboarding(userDetails.getMember().getMemberUserId(), request));
     }
 

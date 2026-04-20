@@ -15,6 +15,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,12 +30,14 @@ public class AuthController {
 
     // 1. 이메일 회원가입  POST /api/v1/auth/signup
     @PostMapping("/signup")
-    @ResponseStatus(HttpStatus.CREATED)//성공 시 상태
-    public ApiResponse<SignupResponse> signup(
+    public ResponseEntity<ApiResponse<SignupResponse>> signup(
             @Valid @RequestBody SignupRequest request,HttpServletResponse response) {// 유효성 검사 + JSON 형태의 요청 본문 DTO로 변환
                 AuthService.TokenPair result = authService.signup(request);
                 setRefreshTokenCookie(response, result.refreshToken());
-                    return ApiResponse.success(201,"회원가입이 완료되었습니다. 이메일 인증을 진행해주세요.", result.response());
+                HttpStatus status = HttpStatus.CREATED;
+                return ResponseEntity
+                        .status(status)
+                        .body(ApiResponse.success(status.value(),"회원가입 완료", result.response()));
     }
 
     // 2. 이메일 인증코드 확인  POST /api/v1/auth/email/verify
