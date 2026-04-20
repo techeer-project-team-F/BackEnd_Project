@@ -199,12 +199,28 @@ public class ReviewService {
     //태그 저장
     private List<String> saveTags(Review review, List<String> tagNames) {
         if (tagNames == null || tagNames.isEmpty()) return List.of();
-        //해당 이름의 태그가 있으면 그대로 쓰고 없으면 새로 만들어서 저장하고 그 태그를 현재 리뷰와 연결 후 저장
-        return tagNames.stream().map(name ->{
-            Tag tag = tagRepository.findByTagName(name).orElseGet(()-> tagRepository.save(Tag.create(name)));//orElseGet : Optioal 값이 null일때만 람다 실행
-            reviewTagRepository.save(ReviewTag.create(review, tag)); // 리뷰,테그 다대다 풀어주는 데이터 생성
-            return name;
-        }).toList();
+
+        //기존 태그 일괄 조회 (IN절 — 쿼리 1번)
+        Map<String, Tag> existingTags = tagRepository.findByTagNameIn(tagNames).stream()
+                .collect(Collectors.toMap(Tag::getTagName, t -> t));
+
+        // 없는 태그만 일괄 저장 (쿼리 1번)
+        List<Tag> newTags = tagNames.stream()
+                .filter(name -> !existingTags.containsKey(name))
+                .map(Tag::create)
+                .toList();
+        if (!newTags.isEmpty()) tagRepository.saveAll(newTags);
+
+        // 전체 태그 맵 구성
+        newTags.forEach(t -> existingTags.put(t.getTagName(), t));
+
+        // ReviewTag 일괄 저장 (쿼리 1번)
+        List<ReviewTag> reviewTags = tagNames.stream()
+                .map(name -> ReviewTag.create(review, existingTags.get(name)))
+                .toList();
+        reviewTagRepository.saveAll(reviewTags);
+
+        return tagNames;
     }
     //삭제안된 리뷰 찾기
     private Review getReviewOrThrow(Long reviewId) {

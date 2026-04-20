@@ -154,10 +154,12 @@ public class BookService {
             default -> reviewRepository.findBookReviewsLatest(
                     bookId, request.getCursor(), PageRequest.of(0, pageSize));
         };
-        List<BookReviewResponse> content = reviews.stream().map(review -> {
-                    boolean isLiked = memberUserId != null && reviewLikeRepository.existsByReview_ReviewIdAndMember_MemberUserId(review.getReviewId(), memberUserId);
-                    return BookReviewResponse.of(review, isLiked);
-                }).toList();
+        List<Long> reviewIds = reviews.stream().map(Review::getReviewId).toList();
+        Set<Long> likedIds = memberUserId != null ? reviewLikeRepository.findLikedReviewIds(reviewIds, memberUserId) : Set.of();
+        //set으로 하는게 성능이 더 좋으니깐 사용
+        List<BookReviewResponse> content = reviews.stream()
+                .map(review -> BookReviewResponse.of(review, likedIds.contains(review.getReviewId())))
+                .toList();
 
         return BookReviewListResponse.of(content, request.getLimit());
     }
