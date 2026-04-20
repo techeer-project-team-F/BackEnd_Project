@@ -3,6 +3,8 @@ package com.shelfeed.backend.domain.auth.controller;
 import com.shelfeed.backend.domain.auth.dto.request.*;
 import com.shelfeed.backend.domain.auth.dto.response.*;
 import com.shelfeed.backend.domain.auth.service.AuthService;
+import com.shelfeed.backend.global.common.exception.BusinessException;
+import com.shelfeed.backend.global.common.exception.ErrorCode;
 import com.shelfeed.backend.global.common.response.ApiResponse;
 import com.shelfeed.backend.global.jwt.JwtProvider;
 import com.shelfeed.backend.global.security.CustomUserDetails;
@@ -93,6 +95,9 @@ public class AuthController {
             @RequestHeader("Authorization") String bearerToken,
             @CookieValue(name = "refreshToken", required = false) String refreshToken,
             HttpServletResponse response) {
+        if (bearerToken == null || !bearerToken.startsWith("Bearer ")){
+            throw new BusinessException(ErrorCode.INVALID_TOKEN);
+        }
         String accessToken = bearerToken.substring(7);
         authService.logout(userDetails.getMember().getMemberUserId(), accessToken, refreshToken);
         deleteRefreshTokenCookie(response);

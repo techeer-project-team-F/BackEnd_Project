@@ -11,6 +11,8 @@ import com.shelfeed.backend.domain.member.dto.response.UpdateGenresResponse;
 import com.shelfeed.backend.domain.member.dto.response.UpdateProfileResponse;
 import com.shelfeed.backend.domain.member.dto.response.UserProfileResponse;
 import com.shelfeed.backend.domain.member.service.MemberService;
+import com.shelfeed.backend.global.common.exception.BusinessException;
+import com.shelfeed.backend.global.common.exception.ErrorCode;
 import com.shelfeed.backend.global.common.response.ApiResponse;
 import com.shelfeed.backend.global.jwt.JwtProvider;
 import com.shelfeed.backend.global.security.CustomUserDetails;
@@ -99,6 +101,9 @@ public class MemberController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestHeader("Authorization") String bearerToken,//요청헤더에서 Authorization 만 가져오기
             @RequestBody WithdrawRequest request, HttpServletResponse response){
+        if (bearerToken == null || !bearerToken.startsWith("Bearer ")){
+            throw new BusinessException(ErrorCode.INVALID_TOKEN);
+        }
         String accessToken = bearerToken.substring(7);
         memberService.withdraw(userDetails.getMember().getMemberUserId(), accessToken, request);
         deleteRefreshTokenCookie(response);
