@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -111,14 +112,16 @@ public class SearchService {
         boolean hasNext = members.size() > limit;
         List<Member> result = hasNext ? members.subList(0, limit) : members;
         //내가 팔로잉을 했는가
-        List<UserSearchResult> content = result.stream().map(target -> {
-            boolean isFollowing = false;
-            if (memberUserId != null) {
-                Member me = getMember(memberUserId);
-                isFollowing = followRepository.existsByFollowerAndFollowee(me, target);
-            }
-            return UserSearchResult.of(target, isFollowing);
-        }).toList();
+        Set<Long> followingIds = Set.of();
+        if (memberUserId != null && !result.isEmpty()) {
+            Member me = getMember(memberUserId);
+            followingIds = followRepository.findFollowingIds(me, result);
+        }
+
+        final Set<Long> finalFollowingIds = followingIds;
+        List<UserSearchResult> content = result.stream()
+                .map(target -> UserSearchResult.of(target, finalFollowingIds.contains(target.getMemberUserId())))
+                .toList();
 
         Long nextCursor = hasNext ? result.get(result.size() - 1).getMemberUserId() : null;
 

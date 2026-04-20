@@ -47,12 +47,12 @@ public class ReviewService {
     // ── 1 감상 작성
     @Transactional
     public ReviewCreateResponse createReview(Long memberUserId, ReviewCreateRequest request) {
-        Member member = getMember(memberUserId);
-        Book book = getBook(request.getBookId());
         //글이랑 인용구 둘 중 하난 필요
         if (request.getContent() == null && request.getQuote() == null) {
             throw new BusinessException(ErrorCode.CONTENT_OR_QUOTE_REQUIRED);
         }
+        Member member = getMember(memberUserId);
+        Book book = getBook(request.getBookId());
         //동일한 도서를 중복으로 감상 눌렀을 떄 에러
         if (reviewRepository.existsByMemberAndBook_BookIdAndIsDeletedFalse(member, request.getBookId())){
             throw new BusinessException(ErrorCode.DUPLICATE_REVIEW);
@@ -92,15 +92,15 @@ public class ReviewService {
     //3. 감상 수정
     @Transactional
     public ReviewUpdateResponse updateReview(Long reviewId, Long memberUserId, ReviewUpdateRequest request){
+        //content, quote 둘 다 필요
+        if (request.getContent() == null && request.getQuote() == null){
+            throw new BusinessException(ErrorCode.CONTENT_OR_QUOTE_REQUIRED);
+        }
+
         Review review = getReviewOrThrow(reviewId);//삭제 안된 리뷰 여부(소프트 델리트)
         // 내 감상인가 확인
         if (!review.getMember().getMemberUserId().equals(memberUserId)){
             throw new BusinessException(ErrorCode.NOT_REVIEW_OWNER);
-        }
-
-        //content, quote 둘 다 필요
-        if (request.getContent() == null && request.getQuote() == null){
-            throw new BusinessException(ErrorCode.CONTENT_OR_QUOTE_REQUIRED);
         }
 
         // DRAFT가 PUBLISHED로 바뀌면 reviewCount 증가
@@ -199,12 +199,30 @@ public class ReviewService {
     //태그 저장
     private List<String> saveTags(Review review, List<String> tagNames) {
         if (tagNames == null || tagNames.isEmpty()) return List.of();
-        //해당 이름의 태그가 있으면 그대로 쓰고 없으면 새로 만들어서 저장하고 그 태그를 현재 리뷰와 연결 후 저장
-        return tagNames.stream().map(name ->{
-            Tag tag = tagRepository.findByTagName(name).orElseGet(()-> tagRepository.save(Tag.create(name)));//orElseGet : Optioal 값이 null일때만 람다 실행
-            reviewTagRepository.save(ReviewTag.create(review, tag)); // 리뷰,테그 다대다 풀어주는 데이터 생성
-            return name;
-        }).toList();
+        List<String> uniqueTagNames = tagNames.stream().distinct().toList();
+
+
+        //기존 태그 일괄 조회 (IN절 — 쿼리 1번)
+        Map<String, Tag> existingTags = tagRepository.findByTagNameIn(uniqueTagNames).stream()
+                .collect(Collectors.toMap(Tag::getTagName, t -> t));
+
+        // 없는 태그만 일괄 저장 (쿼리 1번)
+        List<Tag> newTags = uniqueTagNames.stream()
+                .filter(name -> !existingTags.containsKey(name))
+                .map(Tag::create)
+                .toList();
+        if (!newTags.isEmpty()) tagRepository.saveAll(newTags);
+
+        // 전체 태그 맵 구성
+        newTags.forEach(t -> existingTags.put(t.getTagName(), t));
+
+        // ReviewTag 일괄 저장 (쿼리 1번)
+        List<ReviewTag> reviewTags = uniqueTagNames.stream()
+                .map(name -> ReviewTag.create(review, existingTags.get(name)))
+                .toList();
+        reviewTagRepository.saveAll(reviewTags);
+
+        return uniqueTagNames;
     }
     //삭제안된 리뷰 찾기
     private Review getReviewOrThrow(Long reviewId) {

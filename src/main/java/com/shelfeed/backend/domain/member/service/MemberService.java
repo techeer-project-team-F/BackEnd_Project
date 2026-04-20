@@ -50,12 +50,12 @@ public class MemberService {
             throw new BusinessException(ErrorCode.ONBOARDING_ALREADY_COMPLETED);
         }
 
+        List<Genre> genres = getValidatedGenres(request.getGenreIds());
+
         if (!request.getNickname().equals(member.getNickname())
                 && memberRepository.existsByNickname(request.getNickname())) {
             throw new BusinessException(ErrorCode.NICKNAME_ALREADY_EXISTS);
         }
-
-       List<Genre> genres = getValidatedGenres(request.getGenreIds());
 
         member.onboard(request.getNickname(), request.getBio(), request.getProfileImageUrl());
         memberGenreRepository.deleteAllByMember(member);
