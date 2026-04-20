@@ -101,7 +101,7 @@ public class MemberController {
     @DeleteMapping("/me")
     public ApiResponse<Void> withdraw(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestHeader("Authorization") String bearerToken,//요청헤더에서 Authorization 만 가져오기
+            @RequestHeader(value = "Authorization", required = false) String bearerToken,//요청헤더에서 Authorization 만 가져오기
             @RequestBody WithdrawRequest request, HttpServletResponse response){
         if (bearerToken == null || !bearerToken.startsWith("Bearer ")){
             throw new BusinessException(ErrorCode.INVALID_TOKEN);

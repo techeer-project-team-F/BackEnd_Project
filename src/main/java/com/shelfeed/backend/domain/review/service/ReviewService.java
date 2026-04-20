@@ -199,13 +199,15 @@ public class ReviewService {
     //태그 저장
     private List<String> saveTags(Review review, List<String> tagNames) {
         if (tagNames == null || tagNames.isEmpty()) return List.of();
+        List<String> uniqueTagNames = tagNames.stream().distinct().toList();
+
 
         //기존 태그 일괄 조회 (IN절 — 쿼리 1번)
-        Map<String, Tag> existingTags = tagRepository.findByTagNameIn(tagNames).stream()
+        Map<String, Tag> existingTags = tagRepository.findByTagNameIn(uniqueTagNames).stream()
                 .collect(Collectors.toMap(Tag::getTagName, t -> t));
 
         // 없는 태그만 일괄 저장 (쿼리 1번)
-        List<Tag> newTags = tagNames.stream()
+        List<Tag> newTags = uniqueTagNames.stream()
                 .filter(name -> !existingTags.containsKey(name))
                 .map(Tag::create)
                 .toList();
@@ -215,12 +217,12 @@ public class ReviewService {
         newTags.forEach(t -> existingTags.put(t.getTagName(), t));
 
         // ReviewTag 일괄 저장 (쿼리 1번)
-        List<ReviewTag> reviewTags = tagNames.stream()
+        List<ReviewTag> reviewTags = uniqueTagNames.stream()
                 .map(name -> ReviewTag.create(review, existingTags.get(name)))
                 .toList();
         reviewTagRepository.saveAll(reviewTags);
 
-        return tagNames;
+        return uniqueTagNames;
     }
     //삭제안된 리뷰 찾기
     private Review getReviewOrThrow(Long reviewId) {
