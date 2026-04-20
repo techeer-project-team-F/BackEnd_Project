@@ -47,12 +47,12 @@ public class ReviewService {
     // ── 1 감상 작성
     @Transactional
     public ReviewCreateResponse createReview(Long memberUserId, ReviewCreateRequest request) {
-        Member member = getMember(memberUserId);
-        Book book = getBook(request.getBookId());
         //글이랑 인용구 둘 중 하난 필요
         if (request.getContent() == null && request.getQuote() == null) {
             throw new BusinessException(ErrorCode.CONTENT_OR_QUOTE_REQUIRED);
         }
+        Member member = getMember(memberUserId);
+        Book book = getBook(request.getBookId());
         //동일한 도서를 중복으로 감상 눌렀을 떄 에러
         if (reviewRepository.existsByMemberAndBook_BookIdAndIsDeletedFalse(member, request.getBookId())){
             throw new BusinessException(ErrorCode.DUPLICATE_REVIEW);
@@ -92,15 +92,15 @@ public class ReviewService {
     //3. 감상 수정
     @Transactional
     public ReviewUpdateResponse updateReview(Long reviewId, Long memberUserId, ReviewUpdateRequest request){
+        //content, quote 둘 다 필요
+        if (request.getContent() == null && request.getQuote() == null){
+            throw new BusinessException(ErrorCode.CONTENT_OR_QUOTE_REQUIRED);
+        }
+
         Review review = getReviewOrThrow(reviewId);//삭제 안된 리뷰 여부(소프트 델리트)
         // 내 감상인가 확인
         if (!review.getMember().getMemberUserId().equals(memberUserId)){
             throw new BusinessException(ErrorCode.NOT_REVIEW_OWNER);
-        }
-
-        //content, quote 둘 다 필요
-        if (request.getContent() == null && request.getQuote() == null){
-            throw new BusinessException(ErrorCode.CONTENT_OR_QUOTE_REQUIRED);
         }
 
         // DRAFT가 PUBLISHED로 바뀌면 reviewCount 증가
