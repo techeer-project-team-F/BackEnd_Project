@@ -15,7 +15,7 @@ public class Tag {
     @Column(nullable = false)
     private Long tagId;
 
-    @Column(length = 100)
+    @Column(length = 100, unique = true)
     private String tagName;
     //태그 이름 넣으면 그 이름을 가진 태그를 생성함
     public static Tag create(String tagName) {
