@@ -30,7 +30,7 @@ public class SecurityConfig {
     @Value("${cors.allowed-origin:http://localhost:5173}")
     private String allowedOrigin;
 
-    private static final String[] PUBLIC_URLS = {
+    private static final String[] PERMIT_ALL = {
             "/actuator/**",
             "/swagger-ui/**",
             "/swagger-ui.html",
@@ -45,6 +45,16 @@ public class SecurityConfig {
             "/api/v1/auth/oauth2/**",
             "/api/v1/members/*/library",
             "/api/v1/books/**",
+    };
+
+    private static final String[] GET_PERMIT_ALL = {
+            "/api/v1/reviews/{reviewId}",
+            "/api/v1/reviews/{reviewId}/comments",
+            "/api/v1/members/{userId}/reviews",
+            "/api/v1/search",
+            "/api/v1/users/{userId}",
+            "/api/v1/users/{userId}/followers",
+            "/api/v1/users/{userId}/following",
     };
 
     @Bean
@@ -62,9 +72,10 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(PUBLIC_URLS).permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/reviews/{reviewId}").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/members/{userId}/reviews").permitAll()
+                        .requestMatchers(PERMIT_ALL).permitAll()
+                        // /reviews/me 가 {reviewId} 와일드카드에 매칭되어 NPE 발생하는 것을 방지
+                        .requestMatchers(HttpMethod.GET, "/api/v1/reviews/me").authenticated()
+                        .requestMatchers(HttpMethod.GET, GET_PERMIT_ALL).permitAll()
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 ).addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
