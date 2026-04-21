@@ -1,5 +1,6 @@
 package com.shelfeed.backend.domain.comment.service;
 
+import com.shelfeed.backend.domain.block.repository.BlockRepository;
 import com.shelfeed.backend.domain.comment.dto.request.CommentCreateRequest;
 import com.shelfeed.backend.domain.comment.dto.request.CommentUpdateRequest;
 import com.shelfeed.backend.domain.comment.dto.response.*;
@@ -34,12 +35,25 @@ public class CommentService {
     private final ReviewRepository reviewRepository;
     private final CommentRepository commentRepository;
     private final CommentLikeRepository commentLikeRepository;
+    private final BlockRepository blockRepository;
 
     //1. 댓글 작성
     @Transactional
     public CommentCreateResponse createComment(Long revireId, Long memberUserId, CommentCreateRequest request){
         Member member = getMember(memberUserId);
         Review review = getReview(revireId);
+        Member reviewOwner = review.getMember();
+        // 비공개 감상은 작성자 본인만 댓글 가능
+        if (review.getReviewVisibility().name().equals("PRIVATE") &&
+            !reviewOwner.getMemberUserId().equals(memberUserId)) {
+            throw new BusinessException(ErrorCode.PRIVATE_REVIEW);
+        }
+        // 차단 관계 확인 (양방향)
+        if (!reviewOwner.getMemberUserId().equals(memberUserId) &&
+            (blockRepository.existsByBlockerAndBlocked(reviewOwner, member) ||
+             blockRepository.existsByBlockerAndBlocked(member, reviewOwner))) {
+            throw new BusinessException(ErrorCode.BLOCKED_USER);
+        }
         Comment comment;
         if (request.getParentCommentId() == null) {//새 댓글이면 새 댓글 생성
             comment = Comment.createOriginComment(review, member, request.getContent());

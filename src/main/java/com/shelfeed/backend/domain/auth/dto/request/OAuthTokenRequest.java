@@ -10,4 +10,7 @@ public class OAuthTokenRequest {
 
     @NotBlank(message = "redirectUri를 입력해주세요.")
     private String redirectUri;
+
+    @NotBlank(message = "state를 입력해주세요.")
+    private String state;
 }

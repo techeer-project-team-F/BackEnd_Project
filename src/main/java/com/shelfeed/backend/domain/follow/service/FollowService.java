@@ -1,5 +1,6 @@
 package com.shelfeed.backend.domain.follow.service;
 
+import com.shelfeed.backend.domain.block.repository.BlockRepository;
 import com.shelfeed.backend.domain.feed.repository.FeedRepository;
 import com.shelfeed.backend.domain.follow.dto.response.FollowListResponse;
 import com.shelfeed.backend.domain.follow.dto.response.FollowMemberResponse;
@@ -29,6 +30,7 @@ public class FollowService {
     private final MemberRepository memberRepository;
     private final FollowRepository followRepository;
     private final FeedRepository feedRepository;
+    private final BlockRepository blockRepository;
 
     //1. 팔로우
     @Transactional
@@ -39,6 +41,11 @@ public class FollowService {
         }
         Member follower = getMember(memberUserId);
         Member followee = getMember(targetUserId);
+        // 차단 관계 확인 (양방향)
+        if (blockRepository.existsByBlockerAndBlocked(follower, followee) ||
+            blockRepository.existsByBlockerAndBlocked(followee, follower)) {
+            throw new BusinessException(ErrorCode.BLOCKED_USER);
+        }
         //중복 팔로우 방지
         if (followRepository.existsByFollowerAndFollowee(follower, followee)){
             throw new BusinessException(ErrorCode.ALREADY_FOLLOWING);
