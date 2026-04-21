@@ -75,7 +75,9 @@ public class LibraryController {
             @PathVariable Long userId,
             @RequestParam(required = false) ReadingStatus status,
             @RequestParam(required = false) Long cursor,
-            @RequestParam(defaultValue = "20") int limit){
-        return ApiResponse.success(200, libraryService.getUserLibrary(userId,status,cursor,limit));
+            @RequestParam(defaultValue = "20") int limit,
+            @AuthenticationPrincipal CustomUserDetails userDetails){
+        Long requestingUserId = (userDetails != null) ? userDetails.getMember().getMemberUserId() : null;
+        return ApiResponse.success(200, libraryService.getUserLibrary(userId,status,cursor,limit,requestingUserId));
     }
 }

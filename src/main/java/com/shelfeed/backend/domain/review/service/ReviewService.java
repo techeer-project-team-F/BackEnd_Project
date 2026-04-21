@@ -14,6 +14,7 @@ import com.shelfeed.backend.domain.review.entity.Review;
 import com.shelfeed.backend.domain.review.entity.ReviewLike;
 import com.shelfeed.backend.domain.review.entity.ReviewTag;
 import com.shelfeed.backend.domain.review.enums.ReviewStatus;
+import com.shelfeed.backend.domain.block.repository.BlockRepository;
 import com.shelfeed.backend.domain.review.repository.ReviewLikeRepository;
 import com.shelfeed.backend.domain.review.repository.ReviewRepository;
 import com.shelfeed.backend.domain.review.repository.ReviewTagRepository;
@@ -43,6 +44,7 @@ public class ReviewService {
     private final ReviewTagRepository reviewTagRepository;
     private final ReviewLikeRepository reviewLikeRepository;
     private final FeedRepository feedRepository;
+    private final BlockRepository blockRepository;
 
     // ── 1 감상 작성
     @Transactional
@@ -84,6 +86,14 @@ public class ReviewService {
         boolean isMine = memberUserId != null && review.getMember().getMemberUserId().equals(memberUserId);//본인확인
         if (!isMine && review.getReviewVisibility().name().equals("PRIVATE")){//비공개 거나 게시물 주인이 아니면
             throw new BusinessException(ErrorCode.PRIVATE_REVIEW);//비공개 감상
+        }
+        if (!isMine && memberUserId != null) {
+            Member requester = getMember(memberUserId);
+            Member owner = review.getMember();
+            if (blockRepository.existsByBlockerAndBlocked(owner, requester) ||
+                blockRepository.existsByBlockerAndBlocked(requester, owner)) {
+                throw new BusinessException(ErrorCode.BLOCKED_USER);
+            }
         }
         List<String> tags = getTagNames(review);
         return ReviewDetailResponse.of(review,tags,isMine);
@@ -164,6 +174,16 @@ public class ReviewService {
     public ReviewLikeResponse likeReview(Long reviewId, Long memberUserId){
         Review review = getReviewOrThrow(reviewId);
         Member member = getMember(memberUserId);
+        // 비공개 감상은 좋아요 불가
+        if (review.getReviewVisibility().name().equals("PRIVATE")) {
+            throw new BusinessException(ErrorCode.PRIVATE_REVIEW);
+        }
+        // 차단 관계 확인
+        Member owner = review.getMember();
+        if (blockRepository.existsByBlockerAndBlocked(owner, member) ||
+            blockRepository.existsByBlockerAndBlocked(member, owner)) {
+            throw new BusinessException(ErrorCode.BLOCKED_USER);
+        }
         // 셀프 좋아요 막기(나중에 상황봐서 빼도 됨)
         if (review.getMember().getMemberUserId().equals(memberUserId)){
             throw new BusinessException(ErrorCode.SELF_LIKE_NOT_ALLOWED);

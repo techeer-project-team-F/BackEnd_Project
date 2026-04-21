@@ -91,11 +91,12 @@ public class LibraryService {
     }
 
     //6. 타 유저 서재 목록 조회
-    public UserLibraryResponse getUserLibrary(Long userId, ReadingStatus status, Long cursor, int limit) {
+    public UserLibraryResponse getUserLibrary(Long userId, ReadingStatus status, Long cursor, int limit, Long requestingUserId) {
         Member member = getMember(userId);
 
-        // 비공개 서재면 빈 응답 반환
-        if (member.getLibraryVisibility() == LibraryVisibility.PRIVATE) {
+        // 본인 서재는 공개 여부 무관하게 조회
+        boolean isSelf = userId.equals(requestingUserId);
+        if (!isSelf && member.getLibraryVisibility() == LibraryVisibility.PRIVATE) {
             return UserLibraryResponse.ofPrivate();
         }
 

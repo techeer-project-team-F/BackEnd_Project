@@ -9,6 +9,7 @@ import com.shelfeed.backend.domain.member.repository.MemberRepository;
 import com.shelfeed.backend.domain.member.repository.SocialAccountRepository;
 import com.shelfeed.backend.global.common.exception.BusinessException;
 import com.shelfeed.backend.global.common.exception.ErrorCode;
+import com.shelfeed.backend.global.email.EmailService;
 import com.shelfeed.backend.global.jwt.JwtProvider;
 import com.shelfeed.backend.global.redis.RedisService;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -32,6 +33,7 @@ public class AuthService {
     private final JwtProvider jwtProvider;
     private final RedisService redisService;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
     @Value("${oauth2.google.client-id}")
     private String googleClientId;
@@ -60,7 +62,7 @@ public class AuthService {
         // 이메일 인증 코드 생성 후 Redis에 저장 (5분 TTL)
         String code = generateSixDigitCode();
         redisService.saveEmailCode(request.getEmail(), code, 300);
-        // emailService.sendVerificationEmail(request.getEmail(), code); // TODO: 실제 메일 발송
+        emailService.sendVerificationEmail(request.getEmail(), code);
 
         String accessToken = jwtProvider.generateAccessToken(member); //인증 토큰
         String refreshToken = jwtProvider.generateRefreshToken(member); // 재발급 토큰
@@ -106,7 +108,7 @@ public class AuthService {
         }
         String code = generateSixDigitCode();
         redisService.saveEmailCode(request.getEmail(), code, 300);
-        // emailService.sendVerificationEmail(request.getEmail(), code); 찐으로 메일 보내는 코드
+        emailService.sendVerificationEmail(request.getEmail(), code);
     }
 
     // ── 4. 이메일 로그인
@@ -150,6 +152,10 @@ public class AuthService {
 
     // ── 6. Google OAuth 로그인 완료
     public GoogleLoginTokenPair googleLogin(OAuthTokenRequest request) {
+        // CSRF 방어: state 검증
+        if (!redisService.validateAndDeleteOAuthState(request.getState())) {
+            throw new BusinessException(ErrorCode.INVALID_OAUTH_STATE);
+        }
         // 1) Google 토큰 엔드포인트에 code 교환 요청
         GoogleTokenResponse tokenResponse = exchangeGoogleCode(request.getCode(), request.getRedirectUri());
 
@@ -195,15 +201,18 @@ public class AuthService {
     private GoogleTokenResponse exchangeGoogleCode(String code, String redirectUri) {
         org.springframework.web.client.RestClient restClient =
                 org.springframework.web.client.RestClient.create();
+        org.springframework.util.MultiValueMap<String, String> formBody =
+                new org.springframework.util.LinkedMultiValueMap<>();
+        formBody.add("code", code);
+        formBody.add("client_id", googleClientId);
+        formBody.add("client_secret", googleClientSecret);
+        formBody.add("redirect_uri", redirectUri);
+        formBody.add("grant_type", "authorization_code");
         try {
             return restClient.post()
                     .uri("https://oauth2.googleapis.com/token")
                     .contentType(org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED)
-                    .body("code=" + code
-                            + "&client_id=" + googleClientId
-                            + "&client_secret=" + googleClientSecret
-                            + "&redirect_uri=" + redirectUri
-                            + "&grant_type=authorization_code")
+                    .body(formBody)
                     .retrieve()
                     .body(GoogleTokenResponse.class);
         } catch (Exception e) {
@@ -289,7 +298,7 @@ public class AuthService {
         if (memberOpt.isPresent()){//값이 있으면
             String token = UUID.randomUUID().toString(); // 랜덤 토큰 사용
             redisService.savePasswordResetToken(token, request.getEmail(),1800); //30분 제한시간
-            //emailService.sendPasswordResetEmail(request.getEmail(), token);찐으로 메일 보내는 코드
+            emailService.sendPasswordResetEmail(request.getEmail(), token);
         }
     }
 
