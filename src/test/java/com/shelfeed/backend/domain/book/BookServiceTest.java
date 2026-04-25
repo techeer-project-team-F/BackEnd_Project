@@ -182,6 +182,7 @@ class BookServiceTest {
         void 성공_로그인_서재_리뷰_있음() {
             LibraryBook lb = mock(LibraryBook.class);
             lenient().when(lb.getStatus()).thenReturn(ReadingStatus.READING);
+            lenient().when(lb.getLibraryBookId()).thenReturn(100L);
 
             given(bookRepository.findById(10L)).willReturn(Optional.of(book));
             given(bookRepository.findAverageRatingByBookId(10L)).willReturn(4.0);
@@ -193,6 +194,7 @@ class BookServiceTest {
             BookDetailResponse response = bookService.getBook(10L, 1L);
 
             assertThat(response.getMyLibraryStatus()).isEqualTo("READING");
+            assertThat(response.getMyLibraryBookId()).isEqualTo(100L);
             assertThat(response.getMyReviewId()).isEqualTo(50L);
         }
 

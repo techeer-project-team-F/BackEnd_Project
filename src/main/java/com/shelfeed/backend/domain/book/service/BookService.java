@@ -100,6 +100,7 @@ public class BookService {
         Double averageRating = bookRepository.findAverageRatingByBookId(bookId);//평균 별점
         Long reviewCount = bookRepository.countReviewsByBookId(bookId);//리뷰 카운트
         ReadingStatus myLibraryStatus = null;
+        Long myLibraryBookId = null;
         Long myReviewId = null;
 
         if (memberUserId != null){Member member = getMemberOrNull(memberUserId);//멤버 있으면 넣고 없으면 null
@@ -108,6 +109,7 @@ public class BookService {
                 Optional<LibraryBook> libraryBook = libraryRepository.findByMemberIdAndBook_BookId(member,bookId);
                 if (libraryBook.isPresent()){//isPresent : Optional에 데이터가 있으면 true 없으면 false
                     myLibraryStatus = libraryBook.get().getStatus();
+                    myLibraryBookId = libraryBook.get().getLibraryBookId();
                     }
 
                 Optional<Review> myReview = reviewRepository.findByMemberAndBook_BookIdAndIsDeletedFalse(member,bookId);
@@ -116,7 +118,7 @@ public class BookService {
                 }
             }
         }
-        return BookDetailResponse.of(book,averageRating,reviewCount,myLibraryStatus,myReviewId);
+        return BookDetailResponse.of(book,averageRating,reviewCount,myLibraryStatus,myLibraryBookId,myReviewId);
     }
 
     // 3. ISBN 조회
