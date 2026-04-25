@@ -92,6 +92,33 @@ class FollowServiceTest {
         }
 
         @Test
+        @DisplayName("차단한 대상을 팔로우하면 BLOCKED_USER 예외가 발생한다")
+        void 차단된_대상_팔로우_예외() {
+            given(memberRepository.findByMemberUserId(1L)).willReturn(Optional.of(follower));
+            given(memberRepository.findByMemberUserId(2L)).willReturn(Optional.of(followee));
+            given(blockRepository.existsByBlockerAndBlocked(follower, followee)).willReturn(true);
+
+            assertThatThrownBy(() -> followService.follow(2L, 1L))
+                    .isInstanceOf(BusinessException.class)
+                    .extracting("errorCode")
+                    .isEqualTo(ErrorCode.BLOCKED_USER);
+        }
+
+        @Test
+        @DisplayName("차단 당한 대상을 팔로우하면 BLOCKED_USER 예외가 발생한다")
+        void 차단당한_대상_팔로우_예외() {
+            given(memberRepository.findByMemberUserId(1L)).willReturn(Optional.of(follower));
+            given(memberRepository.findByMemberUserId(2L)).willReturn(Optional.of(followee));
+            given(blockRepository.existsByBlockerAndBlocked(follower, followee)).willReturn(false);
+            given(blockRepository.existsByBlockerAndBlocked(followee, follower)).willReturn(true);
+
+            assertThatThrownBy(() -> followService.follow(2L, 1L))
+                    .isInstanceOf(BusinessException.class)
+                    .extracting("errorCode")
+                    .isEqualTo(ErrorCode.BLOCKED_USER);
+        }
+
+        @Test
         @DisplayName("정상 팔로우 시 FollowResponse를 반환하고 카운트가 증가한다")
         void 정상_팔로우_성공() {
             com.shelfeed.backend.domain.follow.entity.Follow follow =

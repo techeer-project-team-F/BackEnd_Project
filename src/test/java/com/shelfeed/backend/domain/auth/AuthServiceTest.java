@@ -109,6 +109,8 @@ class AuthServiceTest {
             AuthService.TokenPair result = authService.signup(request);
 
             assertThat(result.refreshToken()).isEqualTo("refreshToken");
+            assertThat(result.response().getAccessToken()).isEqualTo("accessToken");
+            assertThat(result.response().getAccessTokenExpiresIn()).isEqualTo(3600L);
             verify(emailService).sendVerificationEmail(eq("new@test.com"), anyString());
             verify(redisService).saveRefreshToken(eq(10L), eq("refreshToken"), anyLong());
         }

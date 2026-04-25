@@ -134,6 +134,22 @@ class SearchServiceTest {
         }
 
         @Test
+        @DisplayName("INVALID_SEARCH_TYPE 예외 - 유효하지 않은 type 값")
+        void type_잘못된_값_예외() {
+            assertThatThrownBy(() -> searchService.search("test", "invalid_type", null, 10, null))
+                    .isInstanceOf(BusinessException.class)
+                    .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_SEARCH_TYPE);
+        }
+
+        @Test
+        @DisplayName("INVALID_SEARCH_TYPE 예외 - null type 값")
+        void type_null_예외() {
+            assertThatThrownBy(() -> searchService.search("test", null, null, 10, null))
+                    .isInstanceOf(BusinessException.class)
+                    .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_SEARCH_TYPE);
+        }
+
+        @Test
         @DisplayName("SEARCH_QUERY_REQUIRED 예외 - null 쿼리")
         void 쿼리_null_예외() {
             assertThatThrownBy(() -> searchService.search(null, "all", null, 10, 1L))

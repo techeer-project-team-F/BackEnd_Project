@@ -248,7 +248,7 @@ class ReviewServiceTest {
 
             var result = reviewService.getReview(11L, 1L);
 
-            assertThat(result).isNotNull();
+            assertThat(result.getReviewId()).isEqualTo(11L);
         }
 
         @Test
@@ -262,7 +262,7 @@ class ReviewServiceTest {
 
             var result = reviewService.getReview(10L, 2L);
 
-            assertThat(result).isNotNull();
+            assertThat(result.getReviewId()).isEqualTo(10L);
         }
     }
 
