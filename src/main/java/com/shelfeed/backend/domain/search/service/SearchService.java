@@ -18,6 +18,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Set;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -33,12 +35,18 @@ public class SearchService {
     private final FollowRepository followRepository;
     private final SearchHistoryRepository searchHistoryRepository;
 
+    private static final Set<String> VALID_SEARCH_TYPES = Set.of("all", "book", "user");
+
     //통합 검색
     @Transactional
     public SearchResponse search (String query, String type, Long cursor, int limit, Long memberUserId){
         //쿼리 여부 확인
         if (query == null || query.isBlank()) {
             throw new BusinessException(ErrorCode.SEARCH_QUERY_REQUIRED);
+        }
+        //타입 유효성 확인
+        if (type == null || !VALID_SEARCH_TYPES.contains(type)) {
+            throw new BusinessException(ErrorCode.INVALID_SEARCH_TYPE);
         }
         //로그인 시 검색 기록 저장
         if (memberUserId != null) {
