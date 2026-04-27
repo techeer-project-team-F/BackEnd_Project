@@ -26,6 +26,7 @@ public class BookDetailResponse {
     private Double averageRating;
     private Long reviewCount;
     private String myLibraryStatus;
+    private Long myLibraryBookId;
     private Long myReviewId;
     //4.2 ISBN 조회용
     public static BookDetailResponse ofIsbn(Book book, boolean inMyLibrary) {
@@ -45,7 +46,7 @@ public class BookDetailResponse {
     }
 
     //도서 상세 조회용
-    public static BookDetailResponse of(Book book, Double averageRating, Long reviewCount, ReadingStatus myLibraryStatus, Long myReviewId){
+    public static BookDetailResponse of(Book book, Double averageRating, Long reviewCount, ReadingStatus myLibraryStatus, Long myLibraryBookId, Long myReviewId){
         return BookDetailResponse.builder()
                 .bookId(book.getBookId())
                 .isbn13(book.getIsbn13())
@@ -60,6 +61,7 @@ public class BookDetailResponse {
                 .averageRating(averageRating)
                 .reviewCount(reviewCount)
                 .myLibraryStatus(myLibraryStatus != null ? myLibraryStatus.name() : null)
+                .myLibraryBookId(myLibraryBookId)
                 .myReviewId(myReviewId)
                 .build();
     }

@@ -1,5 +1,6 @@
 package com.shelfeed.backend.domain.follow;
 
+import com.shelfeed.backend.domain.block.repository.BlockRepository;
 import com.shelfeed.backend.domain.feed.repository.FeedRepository;
 import com.shelfeed.backend.domain.follow.dto.response.FollowResponse;
 import com.shelfeed.backend.domain.follow.repository.FollowRepository;
@@ -33,6 +34,7 @@ class FollowServiceTest {
     @Mock MemberRepository memberRepository;
     @Mock FollowRepository followRepository;
     @Mock FeedRepository feedRepository;
+    @Mock BlockRepository blockRepository;
 
     @InjectMocks FollowService followService;
 
@@ -79,12 +81,41 @@ class FollowServiceTest {
         void 중복_팔로우_예외() {
             given(memberRepository.findByMemberUserId(1L)).willReturn(Optional.of(follower));
             given(memberRepository.findByMemberUserId(2L)).willReturn(Optional.of(followee));
+            given(blockRepository.existsByBlockerAndBlocked(follower, followee)).willReturn(false);
+            given(blockRepository.existsByBlockerAndBlocked(followee, follower)).willReturn(false);
             given(followRepository.existsByFollowerAndFollowee(follower, followee)).willReturn(true);
 
             assertThatThrownBy(() -> followService.follow(2L, 1L))
                     .isInstanceOf(BusinessException.class)
                     .extracting("errorCode")
                     .isEqualTo(ErrorCode.ALREADY_FOLLOWING);
+        }
+
+        @Test
+        @DisplayName("차단한 대상을 팔로우하면 BLOCKED_USER 예외가 발생한다")
+        void 차단된_대상_팔로우_예외() {
+            given(memberRepository.findByMemberUserId(1L)).willReturn(Optional.of(follower));
+            given(memberRepository.findByMemberUserId(2L)).willReturn(Optional.of(followee));
+            given(blockRepository.existsByBlockerAndBlocked(follower, followee)).willReturn(true);
+
+            assertThatThrownBy(() -> followService.follow(2L, 1L))
+                    .isInstanceOf(BusinessException.class)
+                    .extracting("errorCode")
+                    .isEqualTo(ErrorCode.BLOCKED_USER);
+        }
+
+        @Test
+        @DisplayName("차단 당한 대상을 팔로우하면 BLOCKED_USER 예외가 발생한다")
+        void 차단당한_대상_팔로우_예외() {
+            given(memberRepository.findByMemberUserId(1L)).willReturn(Optional.of(follower));
+            given(memberRepository.findByMemberUserId(2L)).willReturn(Optional.of(followee));
+            given(blockRepository.existsByBlockerAndBlocked(follower, followee)).willReturn(false);
+            given(blockRepository.existsByBlockerAndBlocked(followee, follower)).willReturn(true);
+
+            assertThatThrownBy(() -> followService.follow(2L, 1L))
+                    .isInstanceOf(BusinessException.class)
+                    .extracting("errorCode")
+                    .isEqualTo(ErrorCode.BLOCKED_USER);
         }
 
         @Test
@@ -95,6 +126,8 @@ class FollowServiceTest {
 
             given(memberRepository.findByMemberUserId(1L)).willReturn(Optional.of(follower));
             given(memberRepository.findByMemberUserId(2L)).willReturn(Optional.of(followee));
+            given(blockRepository.existsByBlockerAndBlocked(follower, followee)).willReturn(false);
+            given(blockRepository.existsByBlockerAndBlocked(followee, follower)).willReturn(false);
             given(followRepository.existsByFollowerAndFollowee(follower, followee)).willReturn(false);
             given(followRepository.save(any())).willReturn(follow);
 
