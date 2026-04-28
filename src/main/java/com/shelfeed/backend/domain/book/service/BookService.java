@@ -5,7 +5,7 @@ import com.shelfeed.backend.domain.book.client.dto.AladinItem;
 import com.shelfeed.backend.domain.book.client.dto.AladinSearchResponse;
 import com.shelfeed.backend.domain.book.dto.request.BookReviewSearchRequest;
 import com.shelfeed.backend.domain.book.dto.request.BookSearchRequest;
-import com.shelfeed.backend.domain.book.dto.respond.*;
+import com.shelfeed.backend.domain.book.dto.response.*;
 import com.shelfeed.backend.domain.book.entity.Book;
 import com.shelfeed.backend.domain.book.repository.BookRepository;
 import com.shelfeed.backend.domain.library.entity.LibraryBook;

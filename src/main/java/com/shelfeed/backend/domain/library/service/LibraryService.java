@@ -4,7 +4,7 @@ import com.shelfeed.backend.domain.book.entity.Book;
 import com.shelfeed.backend.domain.book.repository.BookRepository;
 import com.shelfeed.backend.domain.library.dto.request.LibraryBookAddRequest;
 import com.shelfeed.backend.domain.library.dto.request.LibraryStatusUpdateRequest;
-import com.shelfeed.backend.domain.library.dto.respond.*;
+import com.shelfeed.backend.domain.library.dto.response.*;
 import com.shelfeed.backend.domain.library.entity.LibraryBook;
 import com.shelfeed.backend.domain.library.enums.ReadingStatus;
 import com.shelfeed.backend.domain.library.repository.LibraryRepository;
