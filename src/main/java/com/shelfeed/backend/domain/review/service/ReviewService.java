@@ -15,6 +15,7 @@ import com.shelfeed.backend.domain.review.entity.Review;
 import com.shelfeed.backend.domain.review.entity.ReviewLike;
 import com.shelfeed.backend.domain.review.entity.ReviewTag;
 import com.shelfeed.backend.domain.review.enums.ReviewStatus;
+import com.shelfeed.backend.domain.review.enums.ReviewVisibility;
 import com.shelfeed.backend.domain.block.repository.BlockRepository;
 import com.shelfeed.backend.domain.review.repository.ReviewLikeRepository;
 import com.shelfeed.backend.domain.review.repository.ReviewRepository;
@@ -86,7 +87,7 @@ public class ReviewService {
     public ReviewDetailResponse getReview(Long reviewId, Long memberUserId){
         Review review = getReviewOrThrow(reviewId);//삭제 안된 리뷰 여부(소프트 델리트)
         boolean isMine = memberUserId != null && review.getMember().getMemberUserId().equals(memberUserId);//본인확인
-        if (!isMine && review.getReviewVisibility().name().equals("PRIVATE")){//비공개 거나 게시물 주인이 아니면
+        if (!isMine && review.getReviewVisibility() == ReviewVisibility.PRIVATE){//비공개 거나 게시물 주인이 아니면
             throw new BusinessException(ErrorCode.PRIVATE_REVIEW);//비공개 감상
         }
         if (!isMine && memberUserId != null) {
@@ -177,7 +178,7 @@ public class ReviewService {
         Review review = getReviewOrThrow(reviewId);
         Member member = memberLoader.getOrThrow(memberUserId);
         // 비공개 감상은 좋아요 불가
-        if (review.getReviewVisibility().name().equals("PRIVATE")) {
+        if (review.getReviewVisibility() == ReviewVisibility.PRIVATE) {
             throw new BusinessException(ErrorCode.PRIVATE_REVIEW);
         }
         // 차단 관계 확인

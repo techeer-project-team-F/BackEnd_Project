@@ -10,6 +10,7 @@ import com.shelfeed.backend.domain.comment.repository.CommentLikeRepository;
 import com.shelfeed.backend.domain.comment.repository.CommentRepository;
 import com.shelfeed.backend.domain.member.entity.Member;
 import com.shelfeed.backend.domain.review.entity.Review;
+import com.shelfeed.backend.domain.review.enums.ReviewVisibility;
 import com.shelfeed.backend.domain.review.repository.ReviewRepository;
 import com.shelfeed.backend.global.common.exception.BusinessException;
 import com.shelfeed.backend.global.common.exception.ErrorCode;
@@ -44,7 +45,7 @@ public class CommentService {
         Review review = getReview(revireId);
         Member reviewOwner = review.getMember();
         // 비공개 감상은 작성자 본인만 댓글 가능
-        if (review.getReviewVisibility().name().equals("PRIVATE") &&
+        if (review.getReviewVisibility() == ReviewVisibility.PRIVATE &&
             !reviewOwner.getMemberUserId().equals(memberUserId)) {
             throw new BusinessException(ErrorCode.PRIVATE_REVIEW);
         }
