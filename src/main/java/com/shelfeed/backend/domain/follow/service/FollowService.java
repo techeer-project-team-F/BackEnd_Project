@@ -12,6 +12,7 @@ import com.shelfeed.backend.domain.member.entity.Member;
 import com.shelfeed.backend.domain.member.repository.MemberRepository;
 import com.shelfeed.backend.global.common.exception.BusinessException;
 import com.shelfeed.backend.global.common.exception.ErrorCode;
+import com.shelfeed.backend.global.common.helper.MemberLoader;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,7 @@ import java.util.Set;
 public class FollowService {
 
     private final MemberRepository memberRepository;
+    private final MemberLoader memberLoader;
     private final FollowRepository followRepository;
     private final FeedRepository feedRepository;
     private final BlockRepository blockRepository;
@@ -39,8 +41,8 @@ public class FollowService {
         if (targetUserId.equals(memberUserId)){
             throw new BusinessException(ErrorCode.CANNOT_FOLLOW_SELF);
         }
-        Member follower = getMember(memberUserId);
-        Member followee = getMember(targetUserId);
+        Member follower = memberLoader.getOrThrow(memberUserId);
+        Member followee = memberLoader.getOrThrow(targetUserId);
         // 차단 관계 확인 (양방향)
         if (blockRepository.existsByBlockerAndBlocked(follower, followee) ||
             blockRepository.existsByBlockerAndBlocked(followee, follower)) {
@@ -60,8 +62,8 @@ public class FollowService {
     //2.언팔로우
     @Transactional
     public UnfollowResponse unfollow(Long targetUserId, Long memberUserId){
-        Member follower = getMember(memberUserId);
-        Member followee = getMember(targetUserId);
+        Member follower = memberLoader.getOrThrow(memberUserId);
+        Member followee = memberLoader.getOrThrow(targetUserId);
         //삭제 대상 조회
         Follow follow = followRepository.findByFollowerAndFollowee(follower,followee)
                 .orElseThrow(() -> new BusinessException(ErrorCode.FOLLOW_NOT_FOUND));
@@ -76,9 +78,9 @@ public class FollowService {
     }
     //3.팔로워 목록
     public FollowListResponse getFollowers(Long targetUserId, Long cursor, int limit, Long memberUserId){
-        Member target = getMember(targetUserId);
+        Member target = memberLoader.getOrThrow(targetUserId);
         //사용자 정보 1번만 조회
-        Member me = (memberUserId != null) ? getMember(memberUserId) : null;
+        Member me = (memberUserId != null) ? memberLoader.getOrThrow(memberUserId) : null;
         //팔로워 목록 조회(패치조인)
         List<Follow> follows = followRepository.findFollowersWithMember(target, cursor, PageRequest.of(0, limit + 1));
         // 대상이 되는 팔러워 리스트 추출
@@ -114,9 +116,9 @@ public class FollowService {
 
     //4.팔로잉 목록
     public FollowListResponse getFollowings(Long targetUserId, Long cursor, int limit, Long memberUserId){
-        Member target = getMember(targetUserId);
+        Member target = memberLoader.getOrThrow(targetUserId);
         // 사용자 정보 1번만 조회
-        Member me = (memberUserId != null) ? getMember(memberUserId) : null;
+        Member me = (memberUserId != null) ? memberLoader.getOrThrow(memberUserId) : null;
         // 팔로잉 목록 조회 (패치조인)
         List<Follow> follows = followRepository.findFollowingsWithMember(target, cursor, PageRequest.of(0, limit + 1));
         // 대상이 되는 팔로잉 리스트 추출
@@ -145,10 +147,5 @@ public class FollowService {
     }
 
 
-
-    private Member getMember(Long memberUserId){
-        return memberRepository.findByMemberUserId(memberUserId)
-                .orElseThrow(()-> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
-    }
 
 }

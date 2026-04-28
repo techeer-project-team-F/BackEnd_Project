@@ -9,11 +9,11 @@ import com.shelfeed.backend.domain.comment.entity.CommentLike;
 import com.shelfeed.backend.domain.comment.repository.CommentLikeRepository;
 import com.shelfeed.backend.domain.comment.repository.CommentRepository;
 import com.shelfeed.backend.domain.member.entity.Member;
-import com.shelfeed.backend.domain.member.repository.MemberRepository;
 import com.shelfeed.backend.domain.review.entity.Review;
 import com.shelfeed.backend.domain.review.repository.ReviewRepository;
 import com.shelfeed.backend.global.common.exception.BusinessException;
 import com.shelfeed.backend.global.common.exception.ErrorCode;
+import com.shelfeed.backend.global.common.helper.MemberLoader;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class CommentService {
-    private final MemberRepository memberRepository;
+    private final MemberLoader memberLoader;
     private final ReviewRepository reviewRepository;
     private final CommentRepository commentRepository;
     private final CommentLikeRepository commentLikeRepository;
@@ -40,7 +40,7 @@ public class CommentService {
     //1. 댓글 작성
     @Transactional
     public CommentCreateResponse createComment(Long revireId, Long memberUserId, CommentCreateRequest request){
-        Member member = getMember(memberUserId);
+        Member member = memberLoader.getOrThrow(memberUserId);
         Review review = getReview(revireId);
         Member reviewOwner = review.getMember();
         // 비공개 감상은 작성자 본인만 댓글 가능
@@ -147,7 +147,7 @@ public class CommentService {
     // 5. 댓글 좋아요
     @Transactional
     public CommentLikeResponse likeComment(Long reviewId, Long commentId, Long memberUserId) {
-        Member member = getMember(memberUserId);
+        Member member = memberLoader.getOrThrow(memberUserId);
         Comment comment = getComment(commentId);
         if (!comment.getReview().getReviewId().equals(reviewId)) {
             throw new BusinessException(ErrorCode.COMMENT_NOT_FOUND);
@@ -177,14 +177,6 @@ public class CommentService {
         commentRepository.decreaseLikeCount(comment.getCommentId());
         Comment updatedComment = getComment(commentId);
         return CommentLikeResponse.of(updatedComment);
-    }
-
-
-
-    //추가 메서드
-    private Member getMember(Long memberUserId) {
-        return memberRepository.findByMemberUserId(memberUserId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
     }
 
     private Review getReview(Long reviewId) {
