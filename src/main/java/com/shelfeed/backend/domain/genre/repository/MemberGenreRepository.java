@@ -17,7 +17,7 @@ public interface MemberGenreRepository extends JpaRepository<MemberGenre, Long> 
     @Query("""
     SELECT mg FROM MemberGenre mg JOIN FETCH mg.genre WHERE mg.member = :member
 """)
-    List<MemberGenre> findAllByMemberWithGenre(@Param("memebr") Member member);
+    List<MemberGenre> findAllByMemberWithGenre(@Param("member") Member member);
 
 }
 
