@@ -35,9 +35,9 @@ public class LibraryService {
     @Transactional
     public LibraryBookAddResponse addBook(Long memberUserId, LibraryBookAddRequest request){
         Member member = memberLoader.getOrThrow(memberUserId);
-        Book book = getbook(request.getBookId());
+        Book book = getBook(request.getBookId());
         //이미 서제에 있으면 에러
-        if (libraryRepository.existsByMemberIdAndBook_BookId(member, request.getBookId())){
+        if (libraryRepository.existsByMemberAndBook_BookId(member, request.getBookId())){
             throw new BusinessException(ErrorCode.ALREADY_IN_LIBRARY);
         }
         LibraryBook libraryBook = LibraryBook.create(member, book, request.getStatus());
@@ -57,7 +57,7 @@ public class LibraryService {
     //3. 서재 도서 상세조회
     public LibraryBookDetailResponse getLibraryBookDetail(Long libraryBookId, Long memberUserId){
         Member member = memberLoader.getOrThrow(memberUserId);
-        LibraryBook libraryBook = libraryRepository.findByLibraryBookIdAndMemberId(libraryBookId, member)
+        LibraryBook libraryBook = libraryRepository.findByLibraryBookIdAndMember(libraryBookId, member)
                 .orElseThrow(()->new BusinessException(ErrorCode.LIBRARY_BOOK_NOT_FOUND));
         Review review = reviewRepository.findByMemberAndBook_BookIdAndIsDeletedFalse(member, libraryBook.getBook().getBookId())
                 .orElse(null);
@@ -68,7 +68,7 @@ public class LibraryService {
     @Transactional
     public LibraryStatusUpdateResponse updateStatus(Long libraryBookId, Long memberUserId, LibraryStatusUpdateRequest request){
         Member member = memberLoader.getOrThrow(memberUserId);
-        LibraryBook libraryBook = libraryRepository.findByLibraryBookIdAndMemberId(libraryBookId, member)
+        LibraryBook libraryBook = libraryRepository.findByLibraryBookIdAndMember(libraryBookId, member)
                 .orElseThrow(()->new BusinessException(ErrorCode.LIBRARY_BOOK_NOT_FOUND));
         libraryBook.updateStatus(request.getStatus());
         return LibraryStatusUpdateResponse.of(libraryBook);
@@ -78,7 +78,7 @@ public class LibraryService {
     @Transactional
     public void removeBook(Long libraryBookId, Long memberUserId){
         Member member = memberLoader.getOrThrow(memberUserId);
-        LibraryBook libraryBook = libraryRepository.findByLibraryBookIdAndMemberId(libraryBookId, member)
+        LibraryBook libraryBook = libraryRepository.findByLibraryBookIdAndMember(libraryBookId, member)
                 .orElseThrow(()->new BusinessException(ErrorCode.LIBRARY_BOOK_NOT_FOUND));
         if (reviewRepository.existsByMember_MemberUserIdAndBook_BookIdAndIsDeletedFalse(memberUserId, libraryBook.getBook().getBookId())) {
             throw new BusinessException(ErrorCode.REVIEW_EXISTS);
@@ -100,7 +100,7 @@ public class LibraryService {
         return UserLibraryResponse.of(content, limit);
     }
 
-    private Book getbook(Long bookId){
+    private Book getBook(Long bookId){
         return bookRepository.findById(bookId).orElseThrow(() -> new BusinessException(ErrorCode.BOOK_NOT_FOUND));
     }
 }
