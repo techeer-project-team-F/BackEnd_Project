@@ -118,30 +118,16 @@ public class CommentService {
     @Transactional
     public CommentUpdateResponse updateComment(Long reviewId, Long commentId, Long memberUserId, CommentUpdateRequest request){
         Comment comment = getComment(commentId);
-        //리뷰 없으면
-        if (!comment.getReview().getReviewId().equals(reviewId)){
-            throw new BusinessException(ErrorCode.COMMENT_NOT_FOUND);
-        }
-        //작성한 유저가 없으면
-        if (!comment.getMember().getMemberUserId().equals(memberUserId)){
-            throw new BusinessException(ErrorCode.NOT_COMMENT_OWNER);
-        }
+        validateCommentOwnerAndReview(comment, reviewId, memberUserId);
         comment.update(request.getContent());
-
         return CommentUpdateResponse.of(comment);
     }
+
     // 4. 댓글 삭제
     @Transactional
     public void deleteComment(Long reviewId, Long commentId, Long memberUserId){
         Comment comment = getComment(commentId);
-        //리뷰 없으면
-        if (!comment.getReview().getReviewId().equals(reviewId)){
-            throw new BusinessException(ErrorCode.COMMENT_NOT_FOUND);
-        }
-        //작성한 유저가 없으면
-        if (!comment.getMember().getMemberUserId().equals(memberUserId)){
-            throw new BusinessException(ErrorCode.NOT_COMMENT_OWNER);
-        }
+        validateCommentOwnerAndReview(comment, reviewId, memberUserId);
         comment.softDelete();
         reviewRepository.decreaseCommentCount(comment.getReview().getReviewId());
     }
@@ -161,8 +147,7 @@ public class CommentService {
         }
         commentLikeRepository.save(CommentLike.create(member, comment));
         commentRepository.increaseLikeCount(comment.getCommentId());
-        Comment updatedComment = getComment(commentId);
-        return CommentLikeResponse.of(updatedComment);
+        return CommentLikeResponse.of(comment);
     }
 
     // 6. 댓글 좋아요 취소
@@ -176,8 +161,16 @@ public class CommentService {
                 .orElseThrow(()->new BusinessException(ErrorCode.COMMENT_LIKE_NOT_FOUND));
         commentLikeRepository.delete(commentLike);
         commentRepository.decreaseLikeCount(comment.getCommentId());
-        Comment updatedComment = getComment(commentId);
-        return CommentLikeResponse.of(updatedComment);
+        return CommentLikeResponse.of(comment);
+    }
+
+    private void validateCommentOwnerAndReview(Comment comment, Long reviewId, Long memberUserId) {
+        if (!comment.getReview().getReviewId().equals(reviewId)) {
+            throw new BusinessException(ErrorCode.COMMENT_NOT_FOUND);
+        }
+        if (!comment.getMember().getMemberUserId().equals(memberUserId)) {
+            throw new BusinessException(ErrorCode.NOT_COMMENT_OWNER);
+        }
     }
 
     private Review getReview(Long reviewId) {

@@ -66,7 +66,7 @@ public class ReviewService {
         LibraryBook libraryBook = null;
         if (request.getLibraryBookId() != null) {
             libraryBook = libraryRepository
-                    .findByLibraryBookIdAndMemberId(request.getLibraryBookId(), member)
+                    .findByLibraryBookIdAndMember(request.getLibraryBookId(), member)
                     .orElseThrow(() -> new BusinessException(ErrorCode.LIBRARY_BOOK_NOT_FOUND));
         }
         //감상 저장
@@ -111,10 +111,7 @@ public class ReviewService {
         }
 
         Review review = getReviewOrThrow(reviewId);//삭제 안된 리뷰 여부(소프트 델리트)
-        // 내 감상인가 확인
-        if (!review.getMember().getMemberUserId().equals(memberUserId)){
-            throw new BusinessException(ErrorCode.NOT_REVIEW_OWNER);
-        }
+        validateReviewOwner(review, memberUserId);
 
         // DRAFT가 PUBLISHED로 바뀌면 reviewCount 증가
         boolean wasPublished = review.getReviewStatus() == ReviewStatus.PUBLISHED;
@@ -137,11 +134,8 @@ public class ReviewService {
     @Transactional
     public void deleteReview(Long reviewId, Long memberUserId) {
         Review review = getReviewOrThrow(reviewId);//삭제 안된 리뷰 여부(소프트 델리트)
-        // 내 감상인가 확인
-        if (!review.getMember().getMemberUserId().equals(memberUserId)) {
-            throw new BusinessException(ErrorCode.NOT_REVIEW_OWNER);
-        }
-        review.softDelect();//삭제
+        validateReviewOwner(review, memberUserId);
+        review.softDelete();
         //PUBLISHED 였으면 리뷰 카운트 감소
         if (review.getReviewStatus() == ReviewStatus.PUBLISHED){
             memberRepository.decreaseReviewCount(review.getMember().getMemberUserId());
@@ -244,6 +238,12 @@ public class ReviewService {
 
         return uniqueTagNames;
     }
+    private void validateReviewOwner(Review review, Long memberUserId) {
+        if (!review.getMember().getMemberUserId().equals(memberUserId)) {
+            throw new BusinessException(ErrorCode.NOT_REVIEW_OWNER);
+        }
+    }
+
     //삭제안된 리뷰 찾기
     private Review getReviewOrThrow(Long reviewId) {
         return reviewRepository.findByReviewIdAndIsDeletedFalse(reviewId).orElseThrow(()-> new BusinessException(ErrorCode.REVIEW_NOT_FOUND));
