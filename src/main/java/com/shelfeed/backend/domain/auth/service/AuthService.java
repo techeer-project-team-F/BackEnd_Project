@@ -22,10 +22,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.security.SecureRandom;
+import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -40,7 +42,14 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
 
-    private final RestClient restClient = RestClient.create();
+    private final RestClient restClient = buildRestClient();
+
+    private static RestClient buildRestClient() {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(Duration.ofSeconds(5));
+        factory.setReadTimeout(Duration.ofSeconds(5));
+        return RestClient.builder().requestFactory(factory).build();
+    }
 
     @Value("${oauth2.google.client-id}")
     private String googleClientId;
@@ -262,18 +271,15 @@ public class AuthService {
             throw new BusinessException(ErrorCode.INVALID_TOKEN);
         }
 
-        String storedToken = redisService.getRefreshToken(memberUserId);
-        if (storedToken == null || !storedToken.equals(refreshToken)) {
-            redisService.deleteRefreshToken(memberUserId);
-            throw new BusinessException(ErrorCode.TOKEN_REUSE_DETECTED);
-        }
-
         Member member = memberRepository.findByMemberUserId(memberUserId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
 
         String newAccessToken = jwtProvider.generateAccessToken(member);
         String newRefreshToken = jwtProvider.generateRefreshToken(member);
-        redisService.saveRefreshToken(memberUserId, newRefreshToken, jwtProvider.getRefreshTokenExpiresIn());
+
+        if (!redisService.rotateRefreshToken(memberUserId, refreshToken, newRefreshToken, jwtProvider.getRefreshTokenExpiresIn())) {
+            throw new BusinessException(ErrorCode.TOKEN_REUSE_DETECTED);
+        }
 
         return new AuthTokenResult.Refresh(
                 TokenRefreshResponse.of(newAccessToken, jwtProvider.getAccessTokenExpiresIn()), newRefreshToken);
