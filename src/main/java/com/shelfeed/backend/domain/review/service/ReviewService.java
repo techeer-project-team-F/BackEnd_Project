@@ -136,9 +136,11 @@ public class ReviewService {
         } else if (prevStatus == ReviewStatus.PUBLISHED && nextStatus == ReviewStatus.DRAFT) {
             feedRepository.deleteByReview(review);
         } else if (prevStatus == ReviewStatus.PUBLISHED && nextStatus == ReviewStatus.PUBLISHED) {
-            if (prevVis == ReviewVisibility.PUBLIC && nextVis == ReviewVisibility.PRIVATE) {
+            boolean wasPublic = prevVis == ReviewVisibility.PUBLIC;
+            boolean willBePublic = nextVis == ReviewVisibility.PUBLIC;
+            if (wasPublic && !willBePublic) {
                 feedRepository.deleteByReview(review);
-            } else if (prevVis == ReviewVisibility.PRIVATE && nextVis == ReviewVisibility.PUBLIC) {
+            } else if (!wasPublic && willBePublic) {
                 createFeedsForFollowers(review.getMember(), review);
             }
         }

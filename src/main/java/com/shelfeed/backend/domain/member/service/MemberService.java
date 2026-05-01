@@ -188,15 +188,21 @@ private List<Genre> getValidatedGenres(List<Long> genreIds) {
             }
         }
 
-        // 팔로잉 관계 제거 + 팔로이의 followerCount 복원
+        // 팔로잉 관계 제거 + 팔로이의 followerCount 일괄 복원
         List<Follow> outgoing = followRepository.findByFollower(member);
-        outgoing.forEach(f -> memberRepository.decreaseFollowerCount(f.getFollowee().getMemberUserId()));
-        followRepository.deleteAll(outgoing);
+        if (!outgoing.isEmpty()) {
+            List<Long> followeeIds = outgoing.stream().map(f -> f.getFollowee().getMemberUserId()).toList();
+            memberRepository.decreaseFollowerCountBatch(followeeIds);
+            followRepository.deleteAll(outgoing);
+        }
 
-        // 팔로워 관계 제거 + 팔로워의 followingCount 복원
+        // 팔로워 관계 제거 + 팔로워의 followingCount 일괄 복원
         List<Follow> incoming = followRepository.findByFollowee(member);
-        incoming.forEach(f -> memberRepository.decreaseFollowingCount(f.getFollower().getMemberUserId()));
-        followRepository.deleteAll(incoming);
+        if (!incoming.isEmpty()) {
+            List<Long> followerIds = incoming.stream().map(f -> f.getFollower().getMemberUserId()).toList();
+            memberRepository.decreaseFollowingCountBatch(followerIds);
+            followRepository.deleteAll(incoming);
+        }
 
         // 피드 정리
         feedRepository.deleteByMember(member);
