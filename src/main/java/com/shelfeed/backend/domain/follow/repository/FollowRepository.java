@@ -51,7 +51,7 @@ public interface FollowRepository extends JpaRepository<Follow,Long> {
     @Query("""
     SELECT f FROM Follow f
     JOIN FETCH f.follower
-    WHERE f.followee = :target AND f.followId < :cursor
+    WHERE f.followee = :target AND (:cursor IS NULL OR f.followId < :cursor)
     ORDER BY f.followId DESC
     """)
     List<Follow> findFollowersWithMember(@Param("target") Member target,
