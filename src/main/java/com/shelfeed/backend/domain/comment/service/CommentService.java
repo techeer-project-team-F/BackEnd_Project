@@ -92,6 +92,12 @@ public class CommentService {
     public CommentListResponse getComments(Long reviewId, Long cursor, int limit, Long memberUserId){
         Review review = getReview(reviewId);
 
+        if (review.getReviewVisibility() == ReviewVisibility.PRIVATE) {
+            boolean isOwner = memberUserId != null
+                    && review.getMember().getMemberUserId().equals(memberUserId);
+            if (!isOwner) throw new BusinessException(ErrorCode.PRIVATE_REVIEW);
+        }
+
         List<Comment> parentComments = commentRepository.findParentComments(review, cursor, PageRequest.of(0, limit + 1));
         boolean hasNext = parentComments.size() > limit;
         if (hasNext) parentComments = parentComments.subList(0, limit);
