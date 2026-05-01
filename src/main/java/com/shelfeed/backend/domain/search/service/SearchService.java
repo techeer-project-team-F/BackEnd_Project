@@ -2,6 +2,7 @@ package com.shelfeed.backend.domain.search.service;
 
 import com.shelfeed.backend.domain.book.entity.Book;
 import com.shelfeed.backend.domain.book.repository.BookRepository;
+import com.shelfeed.backend.domain.book.service.BookService;
 import com.shelfeed.backend.domain.follow.repository.FollowRepository;
 import com.shelfeed.backend.domain.member.entity.Member;
 import com.shelfeed.backend.domain.member.repository.MemberRepository;
@@ -32,6 +33,7 @@ public class SearchService {
     private final MemberRepository memberRepository;
     private final MemberLoader memberLoader;
     private final BookRepository bookRepository;
+    private final BookService bookService;
     private final FollowRepository followRepository;
     private final SearchHistoryRepository searchHistoryRepository;
 
@@ -68,6 +70,8 @@ public class SearchService {
 
     // 도서 검색
     private SearchPageResponse<BookSearchResult> searchBooks(String query, Long cursor, int limit) {
+        // 첫 페이지일 때만 알라딘 캐싱 — 신규 키워드도 즉시 결과 노출
+        if (cursor == null) bookService.syncFromAladin(query, limit);
         List<Book> books = bookRepository.searchBooks(query, cursor, PageRequest.of(0, limit + 1));
         // 페이지네이션 처리
         boolean hasNext = books.size() > limit;
