@@ -80,4 +80,7 @@ public interface FollowRepository extends JpaRepository<Follow,Long> {
 
     //타 유저의 팔로워 조회
     List<Follow> findByFollowee(Member followee);
+
+    // 탈퇴 처리용
+    List<Follow> findByFollower(Member follower);
 }
