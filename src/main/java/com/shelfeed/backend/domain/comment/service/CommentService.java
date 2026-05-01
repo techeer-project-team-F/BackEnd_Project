@@ -2,6 +2,9 @@ package com.shelfeed.backend.domain.comment.service;
 
 import com.shelfeed.backend.domain.block.repository.BlockRepository;
 import com.shelfeed.backend.domain.comment.dto.request.CommentCreateRequest;
+import com.shelfeed.backend.domain.notification.entity.Notification;
+import com.shelfeed.backend.domain.notification.enums.NotificationType;
+import com.shelfeed.backend.domain.notification.repository.NotificationRepository;
 import com.shelfeed.backend.domain.comment.dto.request.CommentUpdateRequest;
 import com.shelfeed.backend.domain.comment.dto.response.*;
 import com.shelfeed.backend.domain.comment.entity.Comment;
@@ -36,6 +39,7 @@ public class CommentService {
     private final ReviewRepository reviewRepository;
     private final CommentRepository commentRepository;
     private final CommentLikeRepository commentLikeRepository;
+    private final NotificationRepository notificationRepository;
     private final BlockRepository blockRepository;
 
     //1. 댓글 작성
@@ -56,19 +60,25 @@ public class CommentService {
             throw new BusinessException(ErrorCode.BLOCKED_USER);
         }
         Comment comment;
+        Member notifyTarget;
         if (request.getParentCommentId() == null) {//새 댓글이면 새 댓글 생성
             comment = Comment.createOriginComment(review, member, request.getContent());
-        }
-        else {// 댓글이면 부모 댓글에 생성 그것도 아니면 예외
+            notifyTarget = reviewOwner;
+        } else {// 댓글이면 부모 댓글에 생성 그것도 아니면 예외
             Comment parentComment = commentRepository.findByCommentIdAndIsDeletedFalse(request.getParentCommentId())
                     .orElseThrow(()-> new BusinessException(ErrorCode.PARENT_COMMENT_NOT_FOUND));
             if (parentComment.getParentComment() != null){ //부모 댓글이 이미 답글 이면 예외
                 throw new BusinessException(ErrorCode.NESTED_REPLY_NOT_ALLOWED);
             }
-            comment = Comment.createReply(review,member,parentComment,request.getContent());// 대댓글 작성
+            comment = Comment.createReply(review, member, parentComment, request.getContent());// 대댓글 작성
+            notifyTarget = parentComment.getMember();
         }
         commentRepository.save(comment);
         reviewRepository.increaseCommentCount(review.getReviewId());
+        if (!notifyTarget.getMemberUserId().equals(memberUserId)) {
+            notificationRepository.save(Notification.createUserNotification(
+                    notifyTarget, member, NotificationType.COMMENT, comment.getCommentId()));
+        }
         return CommentCreateResponse.of(comment);
     }
 
@@ -146,6 +156,8 @@ public class CommentService {
             throw new BusinessException(ErrorCode.ALREADY_COMMENT_LIKED);
         }
         commentLikeRepository.save(CommentLike.create(member, comment));
+        notificationRepository.save(Notification.createUserNotification(
+                comment.getMember(), member, NotificationType.COMMENT_LIKE, comment.getCommentId()));
         commentRepository.increaseLikeCount(comment.getCommentId());
         return CommentLikeResponse.of(getComment(commentId));
     }

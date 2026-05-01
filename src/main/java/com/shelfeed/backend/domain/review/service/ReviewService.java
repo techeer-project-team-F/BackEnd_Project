@@ -20,6 +20,9 @@ import com.shelfeed.backend.domain.review.entity.ReviewTag;
 import com.shelfeed.backend.domain.review.enums.ReviewStatus;
 import com.shelfeed.backend.domain.review.enums.ReviewVisibility;
 import com.shelfeed.backend.domain.block.repository.BlockRepository;
+import com.shelfeed.backend.domain.notification.entity.Notification;
+import com.shelfeed.backend.domain.notification.enums.NotificationType;
+import com.shelfeed.backend.domain.notification.repository.NotificationRepository;
 import com.shelfeed.backend.domain.review.repository.ReviewLikeRepository;
 import com.shelfeed.backend.domain.review.repository.ReviewRepository;
 import com.shelfeed.backend.domain.review.repository.ReviewTagRepository;
@@ -51,6 +54,7 @@ public class ReviewService {
     private final ReviewLikeRepository reviewLikeRepository;
     private final FeedRepository feedRepository;
     private final FollowRepository followRepository;
+    private final NotificationRepository notificationRepository;
     private final BlockRepository blockRepository;
 
     // ── 1 감상 작성
@@ -198,6 +202,8 @@ public class ReviewService {
         }
         reviewLikeRepository.save(ReviewLike.create(review,member));// 저장
         reviewRepository.increaseLikeCount(review.getReviewId());
+        notificationRepository.save(Notification.createUserNotification(
+                review.getMember(), member, NotificationType.REVIEW_LIKE, review.getReviewId()));
         return ReviewLikeResponse.of(review);
     }
     //8. 감상 좋아요 취소
