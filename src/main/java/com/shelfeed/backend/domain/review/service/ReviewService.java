@@ -84,10 +84,12 @@ public class ReviewService {
 
         //테그 처리(List로 나옴)
         List<String> tagNames = saveTags(review, request.getTags());
-        //요청상태가 계시된 상태라면 리뷰 카운트 1 up + 팔로워 피드 생성
+        //요청상태가 계시된 상태라면 리뷰 카운트 1 up + PUBLIC이면 팔로워 피드 생성
         if (request.getReviewStatus() == ReviewStatus.PUBLISHED) {
             memberRepository.increaseReviewCount(memberUserId);
-            createFeedsForFollowers(member, review);
+            if (request.getReviewVisibility() == ReviewVisibility.PUBLIC) {
+                createFeedsForFollowers(member, review);
+            }
         }
         return ReviewCreateResponse.of(review, tagNames);
     }
@@ -124,11 +126,21 @@ public class ReviewService {
 
         ReviewStatus prevStatus = review.getReviewStatus();
         ReviewStatus nextStatus = request.getReviewStatus();
+        ReviewVisibility prevVis = review.getReviewVisibility();
+        ReviewVisibility nextVis = request.getReviewVisibility();
         if (prevStatus == ReviewStatus.DRAFT && nextStatus == ReviewStatus.PUBLISHED) {
             memberRepository.increaseReviewCount(review.getMember().getMemberUserId());
-            createFeedsForFollowers(review.getMember(), review);
+            if (nextVis == ReviewVisibility.PUBLIC) {
+                createFeedsForFollowers(review.getMember(), review);
+            }
         } else if (prevStatus == ReviewStatus.PUBLISHED && nextStatus == ReviewStatus.DRAFT) {
             feedRepository.deleteByReview(review);
+        } else if (prevStatus == ReviewStatus.PUBLISHED && nextStatus == ReviewStatus.PUBLISHED) {
+            if (prevVis == ReviewVisibility.PUBLIC && nextVis == ReviewVisibility.PRIVATE) {
+                feedRepository.deleteByReview(review);
+            } else if (prevVis == ReviewVisibility.PRIVATE && nextVis == ReviewVisibility.PUBLIC) {
+                createFeedsForFollowers(review.getMember(), review);
+            }
         }
         //업데이트
         review.update(
