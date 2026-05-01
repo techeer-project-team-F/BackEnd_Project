@@ -19,6 +19,8 @@ import com.shelfeed.backend.domain.review.repository.ReviewRepository;
 import com.shelfeed.backend.global.common.exception.BusinessException;
 import com.shelfeed.backend.global.common.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +35,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -206,10 +209,19 @@ public class BookService {
                 .filter(item -> !existing.containsKey(item.getIsbn13()))
                 .map(this::createBookFromItem)
                 .toList();
-        if (!newBooks.isEmpty()) bookRepository.saveAll(newBooks);
 
         Map<String, Book> all = new HashMap<>(existing);
-        newBooks.forEach(b -> all.put(b.getIsbn13(), b));
+        if (!newBooks.isEmpty()) {
+            try {
+                // saveAllAndFlush로 즉시 flush — try 블록 내에서 unique 위반 발생하도록
+                bookRepository.saveAllAndFlush(newBooks);
+                newBooks.forEach(b -> all.put(b.getIsbn13(), b));
+            } catch (DataIntegrityViolationException e) {
+                // 동시 요청으로 인한 unique 위반 — 재조회로 맵 재구성
+                log.warn("도서 saveAll unique 위반 (동시 요청 추정), 재조회 진행: isbns={}", isbns);
+                bookRepository.findByIsbn13In(isbns).forEach(b -> all.put(b.getIsbn13(), b));
+            }
+        }
         return all;
     }
 

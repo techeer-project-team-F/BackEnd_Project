@@ -16,6 +16,7 @@ import com.shelfeed.backend.domain.search.repository.SearchHistoryRepository;
 import com.shelfeed.backend.global.common.exception.BusinessException;
 import com.shelfeed.backend.global.common.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -71,7 +73,14 @@ public class SearchService {
     // 도서 검색
     private SearchPageResponse<BookSearchResult> searchBooks(String query, Long cursor, int limit) {
         // 첫 페이지일 때만 알라딘 캐싱 — 신규 키워드도 즉시 결과 노출
-        if (cursor == null) bookService.syncFromAladin(query, limit);
+        // 알라딘 API 오류·타임아웃 시 DB 결과로 폴백 (검색 자체는 실패하지 않음)
+        if (cursor == null) {
+            try {
+                bookService.syncFromAladin(query, limit);
+            } catch (Exception e) {
+                log.warn("알라딘 캐싱 실패, DB 결과로 폴백: query={}, error={}", query, e.getMessage());
+            }
+        }
         List<Book> books = bookRepository.searchBooks(query, cursor, PageRequest.of(0, limit + 1));
         // 페이지네이션 처리
         boolean hasNext = books.size() > limit;
