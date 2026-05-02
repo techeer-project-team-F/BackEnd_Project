@@ -57,8 +57,8 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
         AND r.isDeleted = false
         AND r.reviewVisibility = 'PUBLIC'
         AND r.reviewStatus = 'PUBLISHED'
-        AND(:cursor IS NULL OR r.likeCount < :cursor)
-        ORDER BY r.likeCount DESC
+        AND(:cursor IS NULL OR r.likeCount < :cursor OR r.likeCount < :cursorLike OR (r.likeCount = :cursorLike AND r.reviewId < :cursorId))
+        ORDER BY r.likeCount DESC, r.reviewId DESC
 """)
     List<Review> findBookReviewsPopular(@Param("bookId") Long bookId,
                                        @Param("cursor") Long cursor,
