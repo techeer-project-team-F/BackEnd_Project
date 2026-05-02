@@ -1,5 +1,6 @@
 package com.shelfeed.backend.domain.search.service;
 
+import com.shelfeed.backend.domain.block.repository.BlockRepository;
 import com.shelfeed.backend.domain.book.entity.Book;
 import com.shelfeed.backend.domain.book.repository.BookRepository;
 import com.shelfeed.backend.domain.book.service.BookService;
@@ -21,6 +22,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -38,6 +40,7 @@ public class SearchService {
     private final BookService bookService;
     private final FollowRepository followRepository;
     private final SearchHistoryRepository searchHistoryRepository;
+    private final BlockRepository blockRepository;
 
     private static final Set<String> VALID_SEARCH_TYPES = Set.of("all", "book", "user");
 
@@ -136,7 +139,16 @@ public class SearchService {
         Set<Long> followingIds = Set.of();
         if (memberUserId != null && !result.isEmpty()) {
             Member me = memberLoader.getOrThrow(memberUserId);
-            followingIds = followRepository.findFollowingIds(me, result);
+            Set<Long> blocked = new HashSet<>(blockRepository.findBlockedIds(me));
+            blocked.addAll(blockRepository.findBlockingIds(me));
+            if (!blocked.isEmpty()) {
+                result = result.stream()
+                        .filter(m -> !blocked.contains(m.getMemberUserId()))//차단 된놈 거르고 나머지를 모은다
+                        .collect(Collectors.toList());
+            }
+            if (!result.isEmpty()) {
+                followingIds = followRepository.findFollowingIds(me, result);
+            }
         }
 
         final Set<Long> finalFollowingIds = followingIds;
@@ -144,7 +156,7 @@ public class SearchService {
                 .map(target -> UserSearchResult.of(target, finalFollowingIds.contains(target.getMemberUserId())))
                 .toList();
 
-        Long nextCursor = hasNext ? result.get(result.size() - 1).getMemberUserId() : null;
+        Long nextCursor = (hasNext && !result.isEmpty()) ? result.get(result.size() - 1).getMemberUserId() : null;
 
         return SearchPageResponse.<UserSearchResult>builder()
                 .content(content)
