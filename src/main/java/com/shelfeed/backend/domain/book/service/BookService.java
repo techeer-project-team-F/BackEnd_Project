@@ -146,12 +146,12 @@ public class BookService {
             throw new BusinessException(ErrorCode.BOOK_NOT_FOUND);
         }
         int pageSize = request.getLimit() + 1;
+        boolean isRatingSort = "rating_high".equals(request.getSort()) || "rating_low".equals(request.getSort());
         List<Review> reviews = switch (request.getSort()){//필터링
-            case "popular" -> reviewRepository.findBookReviewsPopular(bookId, request.getCursor(), PageRequest.of(0,pageSize));
-            case "rating_high" -> reviewRepository.findBookReviewsRatingHigh(bookId, PageRequest.of(0, pageSize));
-            case "rating_low"  -> reviewRepository.findBookReviewsRatingLow(bookId, PageRequest.of(0, pageSize));
-            default -> reviewRepository.findBookReviewsLatest(
-                    bookId, request.getCursor(), PageRequest.of(0, pageSize));
+            case "popular"     -> reviewRepository.findBookReviewsPopular(bookId, request.getCursor(), PageRequest.of(0, pageSize));
+            case "rating_high" -> reviewRepository.findBookReviewsRatingHigh(bookId, request.getCursorRating(), request.getCursor(), PageRequest.of(0, pageSize));
+            case "rating_low"  -> reviewRepository.findBookReviewsRatingLow(bookId, request.getCursorRating(), request.getCursor(), PageRequest.of(0, pageSize));
+            default            -> reviewRepository.findBookReviewsLatest(bookId, request.getCursor(), PageRequest.of(0, pageSize));
         };
         if (memberUserId != null && !reviews.isEmpty()) {
             Member me = getMemberOrNull(memberUserId);
@@ -172,7 +172,7 @@ public class BookService {
                 .map(review -> BookReviewResponse.of(review, likedIds.contains(review.getReviewId())))
                 .toList();
 
-        return BookReviewListResponse.of(content, request.getLimit());
+        return BookReviewListResponse.of(content, request.getLimit(), isRatingSort);
     }
 
     // 알라딘 아이템 → Book 엔티티 생성 (저장 없이 객체만 반환, saveAll용)
