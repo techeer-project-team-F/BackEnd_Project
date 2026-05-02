@@ -16,6 +16,7 @@ import com.shelfeed.backend.domain.search.entity.SearchHistory;
 import com.shelfeed.backend.domain.search.repository.SearchHistoryRepository;
 import com.shelfeed.backend.global.common.exception.BusinessException;
 import com.shelfeed.backend.global.common.exception.ErrorCode;
+import com.shelfeed.backend.global.redis.RedisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -41,6 +42,7 @@ public class SearchService {
     private final FollowRepository followRepository;
     private final SearchHistoryRepository searchHistoryRepository;
     private final BlockRepository blockRepository;
+    private final RedisService redisService;
 
     private static final Set<String> VALID_SEARCH_TYPES = Set.of("all", "book", "user");
 
@@ -80,9 +82,10 @@ public class SearchService {
     private SearchPageResponse<BookSearchResult> searchBooks(String query, Long cursor, int limit) {
         // 첫 페이지일 때만 알라딘 캐싱 — 신규 키워드도 즉시 결과 노출
         // 알라딘 API 오류·타임아웃 시 DB 결과로 폴백 (검색 자체는 실패하지 않음)
-        if (cursor == null) {
+        if (cursor == null && !redisService.isAladinQuerySynced(query)) {
             try {
                 bookService.syncFromAladin(query, limit);
+                redisService.markAladinQuerySynced(query, 5);
             } catch (Exception e) {
                 log.warn("알라딘 캐싱 실패, DB 결과로 폴백: query={}, error={}", query, e.getMessage());
             }
