@@ -55,10 +55,13 @@ public class SearchService {
         if (type == null || !VALID_SEARCH_TYPES.contains(type)) {
             throw new BusinessException(ErrorCode.INVALID_SEARCH_TYPE);
         }
-        //로그인 시 검색 기록 저장
+        //로그인 시 검색 기록 저장 — 동일 키워드 재검색 시 createdAt 갱신(upsert)
         if (memberUserId != null) {
             Member member = memberLoader.getOrThrow(memberUserId);
-            searchHistoryRepository.save(SearchHistory.create(member, query.trim()));
+            searchHistoryRepository.findByMemberAndKeyword(member, query.trim())
+                    .ifPresentOrElse(SearchHistory::touch,
+                            () -> searchHistoryRepository.save(SearchHistory.create(member, query.trim()))
+                    );
         }
 
         SearchPageResponse<BookSearchResult> books = SearchPageResponse.empty();
