@@ -17,10 +17,10 @@ public class RecommendFeedResponse {
     private String recommendType; // CONTENT_BASED | SOCIAL | MIXED | POPULAR
 
     public static RecommendFeedResponse of(List<RecommendItemResponse> content, int limit, String recommendType) {
-        boolean hasNext = content.size() > limit;
+        boolean hasNext = limit > 0 && content.size() > limit;
         List<RecommendItemResponse> result = hasNext ? content.subList(0, limit) : content;
-        Long nextCursorId = hasNext ? result.get(result.size() - 1).getReviewId() : null;
-        Integer nextCursorLike = hasNext ? result.get(result.size() - 1).getLikeCount() : null;
+        Long nextCursorId = (hasNext && !result.isEmpty()) ? result.get(result.size() - 1).getReviewId() : null;
+        Integer nextCursorLike = (hasNext && !result.isEmpty()) ? result.get(result.size() - 1).getLikeCount() : null;
 
         return RecommendFeedResponse.builder()
                 .content(result)

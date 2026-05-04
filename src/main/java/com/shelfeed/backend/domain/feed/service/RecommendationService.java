@@ -9,6 +9,8 @@ import com.shelfeed.backend.domain.review.entity.Review;
 import com.shelfeed.backend.domain.review.repository.ReviewLikeRepository;
 import com.shelfeed.backend.domain.review.repository.ReviewRepository;
 import com.shelfeed.backend.domain.review.repository.ReviewTagRepository;
+import com.shelfeed.backend.global.common.exception.BusinessException;
+import com.shelfeed.backend.global.common.exception.ErrorCode;
 import com.shelfeed.backend.global.common.helper.MemberLoader;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -38,6 +40,9 @@ public class RecommendationService {
 
     public RecommendFeedResponse getRecommendedFeed(Long memberUserId, Integer cursorLike,
                                                      Long cursorId, int limit) {
+        if (limit <= 0) throw new BusinessException(ErrorCode.INVALID_INPUT);
+        if ((cursorLike == null) != (cursorId == null)) throw new BusinessException(ErrorCode.INVALID_INPUT);
+
         Member me = memberLoader.getOrThrow(memberUserId);
         List<String> topCategories = buildTopCategories(me);
         List<Review> reviews;
