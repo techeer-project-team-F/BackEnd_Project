@@ -305,7 +305,7 @@ public class ReviewService {
 
     // 팔로워 전체 피드 일괄 생성
     private void createFeedsForFollowers(Member reviewer, Review review) {
-        List<Feed> feeds = followRepository.findByFollowee(reviewer).stream()
+        List<Feed> feeds = followRepository.findAllFollowersWithMember(reviewer).stream()
                 .map(follow -> Feed.create(follow.getFollower(), review))
                 .toList();
         if (!feeds.isEmpty()) feedRepository.saveAll(feeds);
@@ -313,7 +313,7 @@ public class ReviewService {
 
     // 팔로워에게 새 감상 알림 (followingReviewEnabled 설정 확인)
     private void notifyFollowersOfNewReview(Member reviewer, Review review) {
-        List<Notification> notifications = followRepository.findByFollowee(reviewer).stream()
+        List<Notification> notifications = followRepository.findAllFollowersWithMember(reviewer).stream()
                 .filter(follow -> follow.getFollower().getNotificationPreferences().isFollowingReviewEnabled())
                 .map(follow -> Notification.createUserNotification(
                         follow.getFollower(), reviewer, NotificationType.FOLLOWING_REVIEW, review.getReviewId()))

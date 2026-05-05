@@ -112,7 +112,7 @@ public class MemberController {
     @PatchMapping("/me/settings")
     public ApiResponse<SettingsResponse> updateSettings(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestBody SettingsUpdateRequest request) {
+            @Valid @RequestBody SettingsUpdateRequest request) {
         return ApiResponse.success(200, "설정이 저장되었습니다.",
                 memberService.updateSettings(userDetails.getMember().getMemberUserId(), request));
     }
