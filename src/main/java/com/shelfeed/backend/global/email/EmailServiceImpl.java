@@ -40,7 +40,7 @@ public class EmailServiceImpl implements EmailService {
             helper.setText(htmlBody, true);
             mailSender.send(message);
         } catch (MessagingException e) {
-            throw new RuntimeException("이메일 발송 실패: " + to, e);
+            throw new EmailSendException("이메일 발송 실패", e);
         }
     }
 
@@ -48,7 +48,7 @@ public class EmailServiceImpl implements EmailService {
         return """
             <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px;">
               <h2 style="color:#3B3B3B;">Shelfeed 이메일 인증</h2>
-              <p style="color:#555;">아래 인증 코드를 입력해 주세요. 코드는 <b>10분</b>간 유효합니다.</p>
+              <p style="color:#555;">아래 인증 코드를 입력해 주세요. 코드는 <b>5분</b>간 유효합니다.</p>
               <div style="background:#F5F5F5;border-radius:8px;padding:24px;text-align:center;
                           font-size:32px;font-weight:bold;letter-spacing:8px;color:#2563EB;margin:24px 0;">
                 %s
