@@ -90,6 +90,18 @@ services:
       - loki
     restart: unless-stopped
 
+  # ── k6 결과 저장소 ───────────────────────────────────────────
+  influxdb:
+    image: influxdb:1.8
+    ports:
+      - "8086:8086"
+    environment:
+      INFLUXDB_DB: k6
+    volumes:
+      - influxdb-data:/var/lib/influxdb
+    restart: unless-stopped
+
 volumes:
   prometheus-data:
   grafana-data:
+  influxdb-data:
