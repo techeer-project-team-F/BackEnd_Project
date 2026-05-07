@@ -1,19 +1,28 @@
 // k6 테스트 공통 설정
-// 실행 전: TOKENS 배열에 테스트용 유저들의 JWT Access Token을 채워주세요.
-// 토큰 발급: POST /api/v1/auth/login → response.data.accessToken
+//
+// 사전 준비:
+//   1. k6 run k6/setup-users.js  → 테스트 유저 50명 생성
+//   2. 출력된 토큰 배열을 k6/tokens.local.json 에 저장 (예: ["eyJ...", "eyJ..."])
+//   3. tokens.local.json 은 .gitignore 에 포함되어 있으므로 커밋되지 않습니다.
+//
+// 실행 예시:
+//   k6 run -e BASE_URL=http://54.180.101.81:8080 k6/review-like.js
 
-export const BASE_URL = 'http://54.180.101.81:8080';
+import { SharedArray } from 'k6/data';
 
-// VU마다 다른 유저 토큰을 사용해야 동시성 테스트가 의미있습니다.
-// (같은 유저가 중복 좋아요/팔로우하면 비즈니스 에러가 발생하므로)
-export const TOKENS = [
-  'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxOCIsInJvbGUiOiJVU0VSIiwiaWF0IjoxNzc4MTY5Mjc3LCJleHAiOjE3NzgxNzI4Nzd9.p8EI9DLkGstP2rPKxYPNzHispn0CXll7pjzxN_jKRGg',
-  // 좋아요/팔로우 동시성 테스트는 VU마다 다른 유저 토큰 필요
-  // 아래 스크립트로 테스트 유저를 일괄 생성한 뒤 토큰을 추가하세요.
-];
+export const BASE_URL = __ENV.BASE_URL || 'http://localhost:8080';
+
+// tokens.local.json 이 없으면 k6가 명확한 오류를 출력합니다.
+// setup-users.js 를 먼저 실행해 파일을 생성하세요.
+const tokens = new SharedArray('tokens', function () {
+  return JSON.parse(open('./tokens.local.json'));
+});
 
 export function getToken(vuIndex) {
-  return TOKENS[vuIndex % TOKENS.length];
+  if (tokens.length === 0) {
+    throw new Error('tokens.local.json 이 비어있습니다. setup-users.js 를 먼저 실행하세요.');
+  }
+  return tokens[vuIndex % tokens.length];
 }
 
 export function authHeader(token) {

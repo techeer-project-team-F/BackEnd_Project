@@ -18,9 +18,9 @@ const VU_COUNT = 50;
 export const options = {
   scenarios: {
     concurrent_likes: {
-      executor: 'shared-iterations', // 전체 iterations를 VU들이 나눠서 처리
+      executor: 'per-vu-iterations', // VU당 정확히 1번 실행 보장
       vus: VU_COUNT,
-      iterations: VU_COUNT,          // VU당 1번씩 → 정확히 50번 요청
+      iterations: 1,
       maxDuration: '30s',
     },
   },
