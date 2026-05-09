@@ -35,6 +35,8 @@ services:
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.retention.time=7d'
+      - '--web.enable-remote-write-receiver'
+      - '--enable-feature=native-histograms'
     restart: unless-stopped
 
   grafana:
