@@ -30,6 +30,16 @@ public class AdminInitializer implements ApplicationRunner {//run 메서드를 �
 
     @Override
     public void run(ApplicationArguments args) {
+        if (adminEmail == null || adminEmail.isBlank()) {
+            throw new IllegalStateException("[AdminInitializer] ADMIN_EMAIL이 설정되지 않았습니다.");
+        }
+        if (!adminEmail.trim().matches("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$")) {
+            throw new IllegalStateException("[AdminInitializer] ADMIN_EMAIL 형식이 올바르지 않습니다: " + adminEmail);
+        }
+        if (adminPassword == null || adminPassword.length() < 8) {
+            throw new IllegalStateException("[AdminInitializer] ADMIN_PASSWORD는 8자 이상이어야 합니다.");
+        }
+
         if (memberRepository.existsByEmail(adminEmail)) {
             log.info("[AdminInitializer] 어드민 계정이 이미 존재합니다. 건너뜁니다.");
             return;

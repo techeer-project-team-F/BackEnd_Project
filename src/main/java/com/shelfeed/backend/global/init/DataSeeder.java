@@ -324,10 +324,12 @@ public class DataSeeder implements ApplicationRunner {
                 ReviewVisibility visibility = random.nextInt(10) < 8
                         ? ReviewVisibility.PUBLIC : ReviewVisibility.PRIVATE;
 
+                // totalPages가 null이면 0으로 처리 (알라딘 API가 페이지 수를 미제공하는 경우 존재)
+                int readPages = book.getTotalPages() != null ? book.getTotalPages() : 0;
                 reviewRepository.save(Review.create(
                         member, book, lb,
                         rating, content, quote,
-                        false, book.getTotalPages(),
+                        false, readPages,
                         visibility, ReviewStatus.PUBLISHED
                 ));
                 memberRepository.increaseReviewCount(member.getMemberUserId());
