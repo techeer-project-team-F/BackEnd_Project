@@ -44,7 +44,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     @Query("UPDATE Member m SET m.followingCount = m.followingCount + 1 WHERE m.memberUserId = :id")
     void increaseFollowingCount(@Param("id") Long id);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Transactional
     @Query("UPDATE Member m SET m.followingCount = m.followingCount - 1 WHERE m.memberUserId = :id AND m.followingCount > 0")
     void decreaseFollowingCount(@Param("id") Long id);
