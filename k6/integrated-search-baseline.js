@@ -57,8 +57,9 @@ const cacheHitDuration   = new Trend('integrated_cache_hit_duration', true);    
 const typeAllDuration    = new Trend('integrated_type_all_duration', true);     // type=all 응답시간
 const typeBookDuration   = new Trend('integrated_type_book_duration', true);    // type=book 응답시간
 const typeUserDuration   = new Trend('integrated_type_user_duration', true);    // type=user 응답시간
-const paginationDuration = new Trend('integrated_pagination_duration', true);   // cursor 페이지네이션
-const errorRate          = new Rate('integrated_search_error_rate');            // 전체 오류율
+const paginationDuration          = new Trend('integrated_pagination_duration', true);            // cursor 페이지네이션
+const typeAllAuthenticatedDuration = new Trend('integrated_type_all_authenticated_duration', true); // 로그인 type=all
+const errorRate                   = new Rate('integrated_search_error_rate');                      // 전체 오류율
 const emptyBookCount     = new Counter('integrated_empty_book_results');        // 책 결과 없음
 const emptyUserCount     = new Counter('integrated_empty_user_results');        // 유저 결과 없음
 
@@ -154,18 +155,18 @@ export const options = {
     http_req_failed:                         ['rate<0.05'],
     // 캐시 미스 P95: 알라딘 호출 포함 3000ms 이하면 현재 수준 통과
     // ES 도입 후 목표: P95 < 100ms (캐시 미스도 ES가 처리)
-    'integrated_cache_miss_duration{p:95}':  ['p(95)<3000'],
+    integrated_cache_miss_duration:  ['p(95)<3000'],
     // 캐시 히트 P95: 알라딘 건너뜀 → 1500ms 이하
     // ES 도입 후 목표: P95 < 50ms
-    'integrated_cache_hit_duration{p:95}':   ['p(95)<1500'],
+    integrated_cache_hit_duration:   ['p(95)<1500'],
     // type=all P95: 책+유저 동시 → 3000ms 이하
-    'integrated_type_all_duration{p:95}':    ['p(95)<3000'],
+    integrated_type_all_duration:    ['p(95)<3000'],
     // type=book P95: 알라딘 호출 포함 → 3000ms 이하
-    'integrated_type_book_duration{p:95}':   ['p(95)<3000'],
+    integrated_type_book_duration:   ['p(95)<3000'],
     // type=user P95: 알라딘 없음, MySQL만 → 500ms 이하
-    'integrated_type_user_duration{p:95}':   ['p(95)<500'],
+    integrated_type_user_duration:   ['p(95)<500'],
     // cursor 페이지네이션 P95: 2페이지는 알라딘 없음 → 1500ms 이하
-    'integrated_pagination_duration{p:95}':  ['p(95)<1500'],
+    integrated_pagination_duration:  ['p(95)<1500'],
     // 전체 오류율 5% 미만
     integrated_search_error_rate:            ['rate<0.05'],
   },
@@ -212,7 +213,7 @@ function runCacheMissHit(token) {
     const ok1 = check(res1, {
       '[캐시미스] 상태코드 200': (r) => r.status === 200,
       '[캐시미스] 책 결과 존재': (r) => {
-        try { return JSON.parse(r.body).data?.books?.content?.length >= 0; }
+        try { return JSON.parse(r.body).data?.books?.content?.length > 0; }
         catch { return false; }
       },
     });
@@ -228,9 +229,10 @@ function runCacheMissHit(token) {
     const hit    = Date.now() - start2;
     cacheHitDuration.add(hit);
 
-    check(res2, {
+    const ok2 = check(res2, {
       '[캐시히트] 상태코드 200': (r) => r.status === 200,
     });
+    if (!ok2) errorRate.add(1); else errorRate.add(0);
     console.log(`[캐시히트] ${hit}ms | 차이: ${miss - hit}ms 단축`);
 
     sleep(1);
@@ -410,7 +412,7 @@ function runAuthenticatedSearch(token) {
     const start   = Date.now();
     const res     = http.get(url, { headers });
     const elapsed = Date.now() - start;
-    typeAllDuration.add(elapsed);
+    typeAllAuthenticatedDuration.add(elapsed);
 
     const isAuthed = token !== null;
     check(res, {

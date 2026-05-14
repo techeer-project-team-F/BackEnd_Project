@@ -128,11 +128,11 @@ summaryTrendStats: ['avg', 'min', 'med', 'max', 'p(90)', 'p(95)', 'p(99)'],
     http_req_failed:                          ['rate<0.05'],
     // 단건 검색 P95: 현재 알라딘 API 포함 3000ms 이하면 통과
     // ES 도입 후 목표: P95 < 200ms
-    'book_search_duration{p:95}':             ['p(95)<3000'],
+    book_search_duration:             ['p(95)<3000'],
     // 동시 검색 P95: Rate Limit 포함해도 5000ms 이하
-    'book_search_concurrent_duration{p:95}':  ['p(95)<5000'],
+    book_search_concurrent_duration:  ['p(95)<5000'],
     // 페이지 전환 P95: page 번호 기반 각각 알라딘 호출이므로 3000ms 이하
-    'book_search_pagination_duration{p:95}':  ['p(95)<3000'],
+    book_search_pagination_duration:  ['p(95)<3000'],
     // 알라딘 연동 오류율 10% 미만 (Rate Limit 감안)
     book_search_aladin_error_rate:            ['rate<0.10'],
   },
@@ -281,6 +281,7 @@ function runPaginationSearch(token) {
         },
       });
 
+      if (!ok) aladinErrorRate.add(1); else aladinErrorRate.add(0);
       console.log(`[페이지전환] page=${page} | ${ok ? '성공' : '실패'} | ${elapsed}ms`);
       sleep(0.3);
     }
@@ -323,7 +324,7 @@ export function handleSummary(data) {
 ║   알라딘 오류율: ${pct(err).padEnd(8)}  결과 없음: ${empty?.values?.count ?? 0}건              ║
 ╠══════════════════════════════════════════════════════════════╣
 ║ ES 도입 후 이 파일을 다시 실행해 수치를 비교하세요.           ║
-║ 저장: k6 run --out json=k6/results/book-search-before.json   ║
+║ 저장: k6 run --out json=k6/results/book-search-before-es.json║
 ╚══════════════════════════════════════════════════════════════╝
 `);
   return {};
