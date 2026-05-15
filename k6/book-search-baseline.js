@@ -16,7 +16,7 @@
  */
 
 import http from 'k6/http';
-import { check, sleep } from 'k6';
+import { check, sleep, fail } from 'k6';
 import { Rate, Trend, Counter } from 'k6/metrics';
 import { SharedArray } from 'k6/data';
 import exec from 'k6/execution';
@@ -92,16 +92,17 @@ const PAGINATION_QUERY = '소설';
 
 export function setup() {
   const res = http.get(`${BASE_URL}/actuator/info`);
+  if (res.status !== 200) {
+    fail(`[ABORT] /actuator/info 응답 실패: status=${res.status}`);
+  }
   try {
     const info = JSON.parse(res.body);
     if (!info.profile || !info.profile.includes('mock-aladin')) {
-      console.error(`[ABORT] mock-aladin 프로파일 없음: ${info.profile}`);
-      console.error('서버를 --spring.profiles.active=mock-aladin,perf-seed 로 재시작하세요');
-    } else {
-      console.log(`[setup] 프로파일 확인: ${info.profile}`);
+      fail(`[ABORT] mock-aladin 프로파일 없음: ${info.profile} — 서버를 --spring.profiles.active=mock-aladin,perf-seed 로 재시작하세요`);
     }
-  } catch (_) {
-    console.warn('[setup] /actuator/info 파싱 실패 — 계속 진행');
+    console.log(`[setup] 프로파일 확인: ${info.profile}`);
+  } catch (e) {
+    fail(`[ABORT] /actuator/info 파싱 실패: ${e.message}`);
   }
 }
 
@@ -202,7 +203,8 @@ function runPaginationSearch(token) {
     const elapsed = Date.now() - start;
     paginationDuration.add(elapsed);
 
-    check(res, { [`page=${page} 상태코드 200`]: (r) => r.status === 200 });
+    const ok = check(res, { [`page=${page} 상태코드 200`]: (r) => r.status === 200 });
+    aladinErrorRate.add(ok ? 0 : 1);
     console.log(`[페이지] page=${page} | ${elapsed}ms`);
     sleep(0.5);
   }

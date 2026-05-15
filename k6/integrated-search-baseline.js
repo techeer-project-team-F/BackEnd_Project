@@ -26,7 +26,7 @@
  */
 
 import http from 'k6/http';
-import { check, sleep } from 'k6';
+import { check, sleep, fail } from 'k6';
 import { Rate, Trend } from 'k6/metrics';
 import { SharedArray } from 'k6/data';
 import exec from 'k6/execution';
@@ -115,25 +115,24 @@ const KEYWORDS = [
 export function setup() {
   // 프로파일 가드
   const infoRes = http.get(`${BASE_URL}/actuator/info`);
+  if (infoRes.status !== 200) {
+    fail(`[ABORT] /actuator/info 응답 실패: status=${infoRes.status}`);
+  }
   try {
     const info = JSON.parse(infoRes.body);
     if (!info.profile || !info.profile.includes('mock-aladin')) {
-      console.error(`[ABORT] mock-aladin 프로파일 없음: ${info.profile}`);
-      console.error('서버를 --spring.profiles.active=mock-aladin,perf-seed 로 재시작하세요');
-    } else {
-      console.log(`[setup] 프로파일 확인: ${info.profile}`);
+      fail(`[ABORT] mock-aladin 프로파일 없음: ${info.profile} — 서버를 --spring.profiles.active=mock-aladin,perf-seed 로 재시작하세요`);
     }
-  } catch (_) {
-    console.warn('[setup] /actuator/info 파싱 실패 — 계속 진행');
+    console.log(`[setup] 프로파일 확인: ${info.profile}`);
+  } catch (e) {
+    fail(`[ABORT] /actuator/info 파싱 실패: ${e.message}`);
   }
 
-  // 인증 시나리오 토큰 확인
+  // 인증 시나리오 토큰 확인 — 없으면 type_book_auth가 비인증으로 실행되어 메트릭 오염
   if (tokens.length === 0) {
-    console.warn('[setup] tokens.local.json 없음 — type_book_auth 시나리오는 비인증으로 실행됨');
-    console.warn('[setup] 인증 시나리오 포함 시: k6 run k6/setup-users.js 먼저 실행');
-  } else {
-    console.log(`[setup] 토큰 ${tokens.length}개 로드 완료 — type_book_auth 인증 활성화`);
+    fail('[ABORT] tokens.local.json 없음 — type_book_auth 시나리오는 인증 토큰이 필요합니다. k6 run k6/setup-users.js 를 먼저 실행하세요');
   }
+  console.log(`[setup] 토큰 ${tokens.length}개 로드 완료 — type_book_auth 인증 활성화`);
 
   // Redis 워밍업 — 키워드별 첫 호출로 isAladinQuerySynced 플래그 설정
   console.log('[setup] Redis 워밍업 시작...');
@@ -194,7 +193,7 @@ function runPagination(query) {
   paginationDuration.add(page1);
 
   let nextCursor = null;
-  check(res1, {
+  const ok1 = check(res1, {
     '[page1] 상태코드 200': (r) => r.status === 200,
     '[page1] 응답 정상': (r) => {
       try {
@@ -204,6 +203,7 @@ function runPagination(query) {
       } catch { return false; }
     },
   });
+  searchErrorRate.add(ok1 ? 0 : 1);
   console.log(`[pagination] page1 query="${query}" | ${page1}ms`);
   sleep(0.3);
 
@@ -218,7 +218,8 @@ function runPagination(query) {
   const page2 = Date.now() - start2;
   paginationDuration.add(page2);
 
-  check(res2, { '[page2] 상태코드 200': (r) => r.status === 200 });
+  const ok2 = check(res2, { '[page2] 상태코드 200': (r) => r.status === 200 });
+  searchErrorRate.add(ok2 ? 0 : 1);
   console.log(`[pagination] page2 | ${page2}ms`);
   sleep(0.5);
 }

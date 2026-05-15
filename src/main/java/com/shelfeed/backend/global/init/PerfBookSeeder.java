@@ -38,22 +38,24 @@ public class PerfBookSeeder implements CommandLineRunner {
             return;
         }
 
-        log.info("[PerfBookSeeder] 시딩 시작 (목표: {}건)", TARGET_COUNT);
+        long remaining = TARGET_COUNT - count;
+        log.info("[PerfBookSeeder] 시딩 시작 (기존: {}건, 추가: {}건)", count, remaining);
         long start = System.currentTimeMillis();
 
         List<Book> batch = new ArrayList<>(BATCH_SIZE);
         int seeded = 0;
 
-        for (int i = 0; i < TARGET_COUNT; i++) {
-            String keyword = KEYWORDS[i % KEYWORDS.length];
-            String isbn    = String.format("9%012d", i);
-            String title   = keyword + " 명작 " + i + "편";
+        for (long i = 0; i < remaining; i++) {
+            long idx     = count + i;
+            String keyword = KEYWORDS[(int)(idx % KEYWORDS.length)];
+            String isbn    = String.format("9%012d", idx);
+            String title   = keyword + " 명작 " + idx + "편";
 
             Book book = Book.create(
-                isbn, title, "시드저자" + (i % 100), "시드출판사",
-                null, "Performance test book " + i, 300,
-                LocalDate.of(2020 + (i % 5), (i % 12) + 1, 1),
-                String.valueOf(i),
+                isbn, title, "시드저자" + (idx % 100), "시드출판사",
+                null, "Performance test book " + idx, 300,
+                LocalDate.of(2020 + (int)(idx % 5), (int)(idx % 12) + 1, 1),
+                String.valueOf(idx),
                 "국내도서>" + keyword + ">테스트",
                 keyword
             );
