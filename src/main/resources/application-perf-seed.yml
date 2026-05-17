@@ -4,6 +4,12 @@ spring:
     username: shelfeed
     password: shelfeed
     driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 10        # t3.medium 시뮬레이션 — 커넥션 고갈 재현
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
 
   jpa:
     hibernate:
