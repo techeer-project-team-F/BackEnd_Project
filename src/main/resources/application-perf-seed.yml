@@ -33,7 +33,7 @@ spring:
 
 jwt:
   secret: ${JWT_SECRET}
-  access-expiration: ${JWT_ACCESS_EXPIRATION:3600000}
+  access-expiration: 18000000   # 5시간 (부하 테스트용)
   refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
 
 aladin:
