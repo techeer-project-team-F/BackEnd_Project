@@ -47,7 +47,7 @@ management:
       enabled: true
   tracing:
     sampling:
-      probability: 0.1   # 부하 테스트 중 10% 샘플링 - 오버헤드 최소화하면서 P95 슬로우 요청 추적
+      probability: 0.05  # 5% 샘플링 — 블록 크기 줄여 Tempo compaction OOM 방지
   zipkin:
     tracing:
       endpoint: http://localhost:9411/api/v2/spans

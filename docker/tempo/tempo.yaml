@@ -10,7 +10,7 @@ distributor:
 # 메모리 사용 최소화 - 로컬 테스트용
 ingester:
   trace_idle_period: 10s
-  max_block_duration: 5m
+  max_block_duration: 2m   # 블록 크기 축소 → compaction 메모리 사용 감소
 
 # 로컬 디스크 저장 (테스트 종료 후 휘발성)
 storage:
