@@ -119,7 +119,7 @@ services:
       resources:
         limits:
           cpus: '0.1'
-          memory: 256M
+          memory: 512M
 
   loki:
     image: grafana/loki:3.3.2
@@ -173,8 +173,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.1'
-          memory: 256M
+          cpus: '0.2'
+          memory: 512M
 
 volumes:
   mysql-data:

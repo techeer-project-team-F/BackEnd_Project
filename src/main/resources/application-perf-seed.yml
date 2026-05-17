@@ -52,5 +52,9 @@ management:
     tracing:
       endpoint: http://localhost:9411/api/v2/spans
 
+app:
+  search:
+    history-enabled: false  # 검색 히스토리 락 경합 제거 — LIKE 풀스캔 병목만 순수 측정
+
 info:
   profile: mock-aladin,perf-seed
