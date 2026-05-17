@@ -541,6 +541,83 @@
           "custom": { "lineWidth": 2 }
         }
       }
+    },
+{
+  "id": 21,
+  "type": "timeseries",
+  "title": "디스크 I/O 사용률",
+  "description": "MySQL Docker 볼륨 I/O — LIKE 풀스캔 시 급증",
+  "gridPos": { "x": 0, "y": 49, "w": 24, "h": 8 },
+  "datasource": { "type": "prometheus", "uid": "prometheus" },
+  "targets": [
+    {
+      "refId": "A",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "expr": "rate(node_disk_io_time_seconds_total[1m]) * 100",
+      "legendFormat": "I/O 사용률 %"
+    },
+    {
+      "refId": "B",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "expr": "rate(node_disk_read_bytes_total[1m])",
+      "legendFormat": "읽기 Bps"
+    },
+    {
+      "refId": "C",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "expr": "rate(node_disk_written_bytes_total[1m])",
+      "legendFormat": "쓰기 Bps"
     }
+  ],
+  "fieldConfig": {
+    "defaults": {
+      "unit": "percent",
+      "custom": { "lineWidth": 2 }
+    },
+    "overrides": [
+      {
+        "matcher": { "id": "byFrameRefID", "options": "B" },
+        "properties": [{ "id": "unit", "value": "Bps" }]
+      },
+      {
+        "matcher": { "id": "byFrameRefID", "options": "C" },
+        "properties": [{ "id": "unit", "value": "Bps" }]
+      }
+    ]
+  },
+  "options": {
+    "tooltip": { "mode": "multi" },
+    "legend": { "displayMode": "list", "placement": "bottom" }
+  }
+},
+{
+  "id": 22,
+  "type": "row",
+  "title": "분산 트레이스 (Zipkin → Tempo)",
+  "gridPos": { "x": 0, "y": 57, "w": 24, "h": 1 },
+  "collapsed": false,
+  "panels": []
+},
+{
+  "id": 23,
+  "type": "traces",
+  "title": "느린 트레이스 목록 (> 500ms) — 클릭하여 스팬 분석",
+  "description": "bookRepository.searchBooks 스팬이 전체 시간 대부분을 차지하면 LIKE 풀스캔 증거",
+  "gridPos": { "x": 0, "y": 58, "w": 24, "h": 10 },
+  "datasource": { "type": "tempo", "uid": "tempo" },
+  "targets": [
+    {
+      "refId": "A",
+      "datasource": { "type": "tempo", "uid": "tempo" },
+      "queryType": "traceql",
+      "query": "{ duration > 500ms }",
+      "limit": 20,
+      "tableType": "traces"
+    }
+  ],
+  "options": {
+    "frameType": "TRACE_ID"
+  }
+}
   ]
 }
