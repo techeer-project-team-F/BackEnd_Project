@@ -1541,9 +1541,9 @@
     },
     {
       "id": 23,
-      "type": "traces",
-      "title": "느린 트레이스 목록 (> 300ms) — 클릭하여 스팬 분석",
-      "description": "bookRepository.searchBooks 스팬이 전체 시간 대부분을 차지하면 LIKE 풀스캔 증거",
+      "type": "table",
+      "title": "느린 트레이스 목록 (> 300ms) — Trace ID 클릭 → Explore에서 스팬 분석",
+      "description": "bookRepository.searchBooks 스팬이 전체 시간 대부분을 차지하면 LIKE 풀스캔 증거. traces 패널은 단일 트레이스 뷰어라 목록 표시 불가 → table 패널로 교체",
       "gridPos": {
         "x": 0,
         "y": 71,
@@ -1561,13 +1561,38 @@
             "type": "tempo",
             "uid": "tempo"
           },
-          "queryType": "nativeSearch",
-          "minDuration": "300ms",
-          "limit": 20
+          "queryType": "traceql",
+          "query": "{ duration > 300ms }",
+          "limit": 20,
+          "tableType": "traces"
         }
       ],
       "options": {
-        "frameType": "TRACE_ID"
+        "sortBy": [
+          { "displayName": "Duration", "desc": true }
+        ]
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "left"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Duration" },
+            "properties": [
+              { "id": "unit", "value": "ms" },
+              { "id": "custom.width", "value": 120 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Trace ID" },
+            "properties": [
+              { "id": "custom.width", "value": 280 }
+            ]
+          }
+        ]
       }
     }
   ]

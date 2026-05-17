@@ -168,7 +168,10 @@ function runSearch(query, type, token, durationMetric, scenarioErrorRate) {
   });
 
   scenarioErrorRate.add(ok ? 0 : 1);
-  searchErrorRate.add(ok ? 0 : 1);
+  // all 시나리오는 scenarioErrorRate === searchErrorRate이므로 중복 add 방지
+  if (scenarioErrorRate !== searchErrorRate) {
+    searchErrorRate.add(ok ? 0 : 1);
+  }
   sloViolationRate.add(ms >= SLO_MS ? 1 : 0);
   if (!ok) console.error(`[${type}] 실패 query="${query}" status=${res.status} ${ms}ms`);
 
