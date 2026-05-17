@@ -1,13 +1,13 @@
 spring:
   datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    url: jdbc:mysql://localhost:3308/shelfeed?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
+    username: shelfeed
+    password: shelfeed
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
     show-sql: false
     properties:
       hibernate:
@@ -33,12 +33,18 @@ jwt:
 aladin:
   api:
     ttbkey: mock-key-not-used
-    version: 20131101
+    version: "20131101"
 
 management:
   info:
     env:
       enabled: true
+  tracing:
+    sampling:
+      probability: 0.1   # 부하 테스트 중 10% 샘플링 - 오버헤드 최소화하면서 P95 슬로우 요청 추적
+  zipkin:
+    tracing:
+      endpoint: http://localhost:9411/api/v2/spans
 
 info:
   profile: mock-aladin,perf-seed
