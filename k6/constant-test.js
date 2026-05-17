@@ -75,8 +75,8 @@ const KEYWORDS = [
 ];
 
 // ── VU 배분 계산 (book_auth 5/7, user 1/7, all 나머지) ────────────
-const VU_BOOK_AUTH = Math.max(1, Math.round(CONSTANT_VUS * 5 / 7));
-const VU_USER      = Math.max(1, Math.round(CONSTANT_VUS * 1 / 7));
+const VU_BOOK_AUTH = Math.max(1, Math.floor(CONSTANT_VUS * 5 / 7));
+const VU_USER      = Math.max(1, Math.floor(CONSTANT_VUS * 1 / 7));
 const VU_ALL       = Math.max(1, CONSTANT_VUS - VU_BOOK_AUTH - VU_USER);
 
 export const options = {

@@ -13,7 +13,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: false
     properties:
       hibernate:
@@ -34,7 +34,7 @@ spring:
 
 jwt:
   secret: ${JWT_SECRET}
-  access-expiration: 18000000   # 5시간 (부하 테스트용)
+  access-expiration: 18000000   # 5시간 — PERF TEST ONLY, 스테이징/운영 배포 금지
   refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
 
 aladin:

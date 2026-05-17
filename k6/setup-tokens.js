@@ -17,8 +17,8 @@
 import http from 'k6/http';
 
 const BASE_URL   = __ENV.BASE_URL  || 'http://localhost:8080';
-const USER_COUNT = parseInt(__ENV.USER_COUNT || '500');
-const BATCH_SIZE = parseInt(__ENV.BATCH_SIZE || '20');
+const USER_COUNT = Math.max(1, parseInt(__ENV.USER_COUNT || '500') || 500);
+const BATCH_SIZE = Math.max(1, parseInt(__ENV.BATCH_SIZE || '20') || 20);
 const PASSWORD   = 'Perf@test1!';
 const HEADERS    = { 'Content-Type': 'application/json' };
 
