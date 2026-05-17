@@ -1561,10 +1561,9 @@
             "type": "tempo",
             "uid": "tempo"
           },
-          "queryType": "traceql",
-          "query": "{ duration > 300ms }",
-          "limit": 20,
-          "tableType": "traces"
+          "queryType": "nativeSearch",
+          "minDuration": "300ms",
+          "limit": 20
         }
       ],
       "options": {

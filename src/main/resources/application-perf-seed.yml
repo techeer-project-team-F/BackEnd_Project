@@ -7,7 +7,7 @@ spring:
     hikari:
       maximum-pool-size: 10        # t3.medium 시뮬레이션 — 커넥션 고갈 재현
       minimum-idle: 5
-      connection-timeout: 30000
+      connection-timeout: 5000     # 5초 초과 대기 시 SQLTimeoutException → 현실적 사용자 포기 시점
       idle-timeout: 600000
       max-lifetime: 1800000
 
@@ -21,6 +21,7 @@ spring:
           batch_size: 1000
         order_inserts: true
         order_updates: true
+        query_timeout: 5      # 쿼리 실행 5초 초과 시 강제 종료
 
   sql:
     init:
