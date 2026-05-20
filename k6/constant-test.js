@@ -71,9 +71,10 @@ function getToken(vuId) {
 
 // ── VU 배분 계산 (book_auth 3/5, user 1/5, all 1/5) ────────────
 //   예: CONSTANT_VUS=50 → book_auth 30, user 10, all 10
-const VU_BOOK_AUTH = Math.max(1, Math.floor(CONSTANT_VUS * 3 / 5));
-const VU_USER      = Math.max(1, Math.floor(CONSTANT_VUS * 1 / 5));
-const VU_ALL       = Math.max(1, CONSTANT_VUS - VU_BOOK_AUTH - VU_USER);
+//   floor 사용으로 비율 유지 + 합계가 CONSTANT_VUS 초과하지 않도록 보장
+const VU_BOOK_AUTH = Math.floor(CONSTANT_VUS * 3 / 5);
+const VU_USER      = Math.floor(CONSTANT_VUS * 1 / 5);
+const VU_ALL       = CONSTANT_VUS - VU_BOOK_AUTH - VU_USER;
 
 export const options = {
   summaryTrendStats: ['avg', 'min', 'med', 'max', 'p(90)', 'p(95)', 'p(99)'],

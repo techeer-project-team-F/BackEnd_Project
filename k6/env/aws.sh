@@ -10,9 +10,17 @@ export CONSTANT_VUS=200
 export DURATION=3m
 export USER_COUNT=500
 
-# AWS InfluxDB는 인증이 켜져 있음 (docker-compose.prod.yml 참고)
-# 형식: http://<EC2_IP>:8086/k6?username=<USER>&password=<PASS>
-export INFLUXDB_URL="http://<EC2_IP>:8086/k6?username=admin&password=changeme"
+# AWS InfluxDB 인증 — 자격증명은 절대 이 파일에 적지 말 것
+# 사용 전 아래 환경변수를 셸이나 secret manager 에서 주입:
+#   export INFLUXDB_HOST=<EC2_IP>
+#   export INFLUXDB_PORT=8086
+#   export INFLUXDB_USER=...
+#   export INFLUXDB_PASS=...
+: "${INFLUXDB_HOST:?INFLUXDB_HOST 환경변수 필요}"
+: "${INFLUXDB_PORT:=8086}"
+: "${INFLUXDB_USER:?INFLUXDB_USER 환경변수 필요}"
+: "${INFLUXDB_PASS:?INFLUXDB_PASS 환경변수 필요}"
+export INFLUXDB_URL="http://${INFLUXDB_HOST}:${INFLUXDB_PORT}/k6?username=${INFLUXDB_USER}&password=${INFLUXDB_PASS}"
 
 # AWS는 perf-seed 프로파일 없이 운영되므로 체크 건너뜀
 export SKIP_PROFILE_CHECK=1

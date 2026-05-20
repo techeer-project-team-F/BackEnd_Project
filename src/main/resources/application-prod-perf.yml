@@ -18,11 +18,12 @@ spring:
     password: ${PERF_DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
-      maximum-pool-size: 10
+      maximum-pool-size: 20            # application-prod.yml과 동일 — RDS max_connections=61의 33% 안전 마진
       minimum-idle: 5
       connection-timeout: 5000
       idle-timeout: 600000
       max-lifetime: 1800000
+      leak-detection-threshold: 60000  # 풀스캔 같은 장기 점유 모니터링
 
   jpa:
     hibernate:
