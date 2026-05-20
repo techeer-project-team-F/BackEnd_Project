@@ -23,3 +23,9 @@ spring:
             port: ${MAIL_PORT:465}
             class: javax.net.ssl.SSLSocketFactory
             fallback: false
+
+# 운영 환경엔 Tempo/Zipkin 인프라가 없으므로 트레이싱 비활성화 (로그 폭주 방지)
+management:
+  tracing:
+    sampling:
+      probability: 0
