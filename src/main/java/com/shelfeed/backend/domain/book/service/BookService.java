@@ -77,7 +77,7 @@ public class BookService {
             return BookSearchListResponse.of(List.of(), request.getLimit());
         }
 
-        Map<String, Book> allBooksMap = upsertAndGetBooks(items);
+        Map<String, Book> allBooksMap = upsertAndGetBooks(items).books();
         List<Book> allBooks = items.stream()
                 .map(item -> allBooksMap.get(item.getIsbn13()))
                 .filter(Objects::nonNull)
@@ -254,11 +254,14 @@ public class BookService {
                 .values().stream().toList();
     }
 
+    // ES 색인 성공 여부와 isbn→Book 맵을 함께 반환 — 호출자가 색인 실패 시 Redis 마커 등을 스킵할 수 있도록 분리
+    private record UpsertResult(Map<String, Book> books, boolean indexed) {}
+
     /**
-     * DB에 없는 도서만 저장하고 전체 isbn→Book 맵을 반환한다.
+     * DB에 없는 도서만 저장하고 전체 isbn→Book 맵과 ES 색인 결과를 반환한다.
      * searchBooks()와 syncFromAladin() 모두 이 메서드를 통해 upsert 한다.
      */
-    private Map<String, Book> upsertAndGetBooks(List<AladinItem> items) {
+    private UpsertResult upsertAndGetBooks(List<AladinItem> items) {
         List<String> isbns = items.stream().map(AladinItem::getIsbn13).toList();
         Map<String, Book> existing = bookRepository.findByIsbn13In(isbns).stream()
                 .collect(Collectors.toMap(Book::getIsbn13, b -> b));
@@ -286,15 +289,15 @@ public class BookService {
                 toIndex.addAll(refetched); // 멱등 — 이미 색인된 책도 동일 ID로 덮어쓰기
             }
         }
-        // ES 색인은 트랜잭션 외부 효과 — DB 저장 성공 후 best-effort 색인
-        indexToElasticsearch(toIndex);
-        return all;
+        // ES 색인은 트랜잭션 외부 효과 — DB 저장 성공 후 best-effort 색인 (성공 여부 반환)
+        boolean indexed = indexToElasticsearch(toIndex);
+        return new UpsertResult(all, indexed);
     }
 
     /**
      * SearchService가 통합 검색 전 호출하는 알라딘 캐싱 메서드.
      * DB에 없는 도서를 INSERT 후 ES 색인까지 완료한다.
-     * @return 알라딘에서 책을 1건 이상 받아왔는지 여부 (호출자가 Redis 캐시 마커 여부 결정)
+     * @return ES 색인까지 모두 성공한 경우만 true — 색인 실패 시 false 반환하여 호출자가 Redis 마커를 찍지 않도록 함
      */
     @Transactional
     public boolean syncFromAladin(String query, int maxResults) {
@@ -302,7 +305,6 @@ public class BookService {
         if (response == null || response.getItems() == null || response.getItems().isEmpty()) return false;
         List<AladinItem> items = deduplicateByIsbn(response.getItems());
         if (items.isEmpty()) return false;
-        upsertAndGetBooks(items);
-        return true;
+        return upsertAndGetBooks(items).indexed();
     }
 }

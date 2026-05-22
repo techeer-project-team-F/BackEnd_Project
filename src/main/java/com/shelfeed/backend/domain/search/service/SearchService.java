@@ -140,6 +140,9 @@ public class SearchService {
                 .filter(Objects::nonNull)
                 .toList();
 
+        // DB 누락 시(ES/DB 정합성 깨짐) content가 limit 미만이면 hasNext도 false로 조정 — 응답 일관성 보장
+        hasNext = hasNext && orderedBooks.size() == limit;
+
         // 통계는 여전히 DB에서 조회 (평점/리뷰수는 ES에 색인 안 함)
         List<Object[]> stats = bookRepository.findReviewStatsByBooks(orderedBooks);
         Map<Long, Object[]> statsMap = stats.stream()
