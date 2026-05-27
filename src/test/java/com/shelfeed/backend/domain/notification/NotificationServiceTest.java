@@ -8,6 +8,7 @@ import com.shelfeed.backend.domain.notification.entity.Notification;
 import com.shelfeed.backend.domain.notification.enums.NotificationType;
 import com.shelfeed.backend.domain.notification.repository.NotificationRepository;
 import com.shelfeed.backend.domain.notification.service.NotificationService;
+import com.shelfeed.backend.global.common.util.CursorUtils;
 import com.shelfeed.backend.global.common.exception.BusinessException;
 import com.shelfeed.backend.global.common.exception.ErrorCode;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,6 +41,7 @@ class NotificationServiceTest {
 
     @Mock NotificationRepository notificationRepository;
     @Mock MemberRepository memberRepository;
+    @Mock CursorUtils cursorUtils;
 
     @InjectMocks NotificationService notificationService;
 

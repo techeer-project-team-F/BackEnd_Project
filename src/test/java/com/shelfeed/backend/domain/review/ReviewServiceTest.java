@@ -19,6 +19,8 @@ import com.shelfeed.backend.domain.review.repository.ReviewRepository;
 import com.shelfeed.backend.domain.review.repository.ReviewTagRepository;
 import com.shelfeed.backend.domain.review.repository.TagRepository;
 import com.shelfeed.backend.domain.review.service.ReviewService;
+import com.shelfeed.backend.domain.follow.repository.FollowRepository;
+import com.shelfeed.backend.domain.notification.repository.NotificationRepository;
 import com.shelfeed.backend.global.common.exception.BusinessException;
 import com.shelfeed.backend.global.common.exception.ErrorCode;
 import org.junit.jupiter.api.BeforeEach;
@@ -54,6 +56,8 @@ class ReviewServiceTest {
     @Mock ReviewLikeRepository reviewLikeRepository;
     @Mock FeedRepository feedRepository;
     @Mock BlockRepository blockRepository;
+    @Mock FollowRepository followRepository;
+    @Mock NotificationRepository notificationRepository;
 
     @InjectMocks ReviewService reviewService;
 

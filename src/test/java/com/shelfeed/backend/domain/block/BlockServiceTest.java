@@ -9,6 +9,7 @@ import com.shelfeed.backend.domain.follow.entity.Follow;
 import com.shelfeed.backend.domain.follow.repository.FollowRepository;
 import com.shelfeed.backend.domain.member.entity.Member;
 import com.shelfeed.backend.domain.member.repository.MemberRepository;
+import com.shelfeed.backend.global.common.helper.MemberLoader;
 import com.shelfeed.backend.global.common.exception.BusinessException;
 import com.shelfeed.backend.global.common.exception.ErrorCode;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,6 +38,7 @@ class BlockServiceTest {
     @Mock BlockRepository blockRepository;
     @Mock FollowRepository followRepository;
     @Mock FeedRepository feedRepository;
+    @Mock MemberLoader memberLoader;
 
     @InjectMocks BlockService blockService;
 

@@ -1,7 +1,10 @@
 package com.shelfeed.backend.domain.search;
 
+import com.shelfeed.backend.domain.block.repository.BlockRepository;
 import com.shelfeed.backend.domain.book.entity.Book;
 import com.shelfeed.backend.domain.book.repository.BookRepository;
+import com.shelfeed.backend.domain.book.repository.BookSearchRepository;
+import com.shelfeed.backend.domain.book.service.BookService;
 import com.shelfeed.backend.domain.follow.repository.FollowRepository;
 import com.shelfeed.backend.domain.member.entity.Member;
 import com.shelfeed.backend.domain.member.repository.MemberRepository;
@@ -9,8 +12,12 @@ import com.shelfeed.backend.domain.search.dto.response.SearchResponse;
 import com.shelfeed.backend.domain.search.entity.SearchHistory;
 import com.shelfeed.backend.domain.search.repository.SearchHistoryRepository;
 import com.shelfeed.backend.domain.search.service.SearchService;
+import com.shelfeed.backend.global.common.helper.MemberLoader;
 import com.shelfeed.backend.global.common.exception.BusinessException;
 import com.shelfeed.backend.global.common.exception.ErrorCode;
+import com.shelfeed.backend.global.redis.RedisService;
+import io.micrometer.tracing.Span;
+import io.micrometer.tracing.Tracer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -37,6 +44,12 @@ class SearchServiceTest {
     @Mock BookRepository bookRepository;
     @Mock FollowRepository followRepository;
     @Mock SearchHistoryRepository searchHistoryRepository;
+    @Mock MemberLoader memberLoader;
+    @Mock BookSearchRepository bookSearchRepository;
+    @Mock BookService bookService;
+    @Mock BlockRepository blockRepository;
+    @Mock RedisService redisService;
+    @Mock Tracer tracer;
 
     @InjectMocks SearchService searchService;
 

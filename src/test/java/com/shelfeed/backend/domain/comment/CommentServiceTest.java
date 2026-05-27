@@ -11,6 +11,8 @@ import com.shelfeed.backend.domain.comment.repository.CommentRepository;
 import com.shelfeed.backend.domain.comment.service.CommentService;
 import com.shelfeed.backend.domain.member.entity.Member;
 import com.shelfeed.backend.domain.member.repository.MemberRepository;
+import com.shelfeed.backend.domain.notification.repository.NotificationRepository;
+import com.shelfeed.backend.global.common.helper.MemberLoader;
 import com.shelfeed.backend.domain.review.entity.Review;
 import com.shelfeed.backend.domain.review.enums.ReviewStatus;
 import com.shelfeed.backend.domain.review.enums.ReviewVisibility;
@@ -45,6 +47,9 @@ class CommentServiceTest {
     @Mock CommentRepository commentRepository;
     @Mock CommentLikeRepository commentLikeRepository;
     @Mock BlockRepository blockRepository;
+
+    @Mock MemberLoader memberLoader;
+    @Mock NotificationRepository notificationRepository;
 
     @InjectMocks CommentService commentService;
 

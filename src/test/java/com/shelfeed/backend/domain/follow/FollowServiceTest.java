@@ -7,6 +7,9 @@ import com.shelfeed.backend.domain.follow.repository.FollowRepository;
 import com.shelfeed.backend.domain.follow.service.FollowService;
 import com.shelfeed.backend.domain.member.entity.Member;
 import com.shelfeed.backend.domain.member.repository.MemberRepository;
+import com.shelfeed.backend.domain.notification.repository.NotificationRepository;
+import com.shelfeed.backend.domain.review.repository.ReviewRepository;
+import com.shelfeed.backend.global.common.helper.MemberLoader;
 import com.shelfeed.backend.global.common.exception.BusinessException;
 import com.shelfeed.backend.global.common.exception.ErrorCode;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,6 +38,9 @@ class FollowServiceTest {
     @Mock FollowRepository followRepository;
     @Mock FeedRepository feedRepository;
     @Mock BlockRepository blockRepository;
+    @Mock MemberLoader memberLoader;
+    @Mock ReviewRepository reviewRepository;
+    @Mock NotificationRepository notificationRepository;
 
     @InjectMocks FollowService followService;
 

@@ -9,6 +9,9 @@ import com.shelfeed.backend.domain.member.entity.Member;
 import com.shelfeed.backend.domain.member.enums.MemberStatus;
 import com.shelfeed.backend.domain.member.repository.MemberRepository;
 import com.shelfeed.backend.domain.member.service.MemberService;
+import com.shelfeed.backend.domain.block.repository.BlockRepository;
+import com.shelfeed.backend.domain.feed.repository.FeedRepository;
+import com.shelfeed.backend.domain.follow.repository.FollowRepository;
 import com.shelfeed.backend.global.common.exception.BusinessException;
 import com.shelfeed.backend.global.common.exception.ErrorCode;
 import com.shelfeed.backend.global.jwt.JwtProvider;
@@ -43,6 +46,9 @@ class MemberServiceTest {
     @Mock PasswordEncoder passwordEncoder;
     @Mock RedisService redisService;
     @Mock JwtProvider jwtProvider;
+    @Mock FollowRepository followRepository;
+    @Mock FeedRepository feedRepository;
+    @Mock BlockRepository blockRepository;
 
     @InjectMocks MemberService memberService;
 

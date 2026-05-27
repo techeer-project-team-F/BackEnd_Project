@@ -15,6 +15,7 @@ import com.shelfeed.backend.domain.library.service.LibraryService;
 import com.shelfeed.backend.domain.member.entity.Member;
 import com.shelfeed.backend.domain.member.enums.LibraryVisibility;
 import com.shelfeed.backend.global.common.helper.MemberLoader;
+import com.shelfeed.backend.domain.follow.repository.FollowRepository;
 import com.shelfeed.backend.domain.review.entity.Review;
 import com.shelfeed.backend.domain.review.repository.ReviewRepository;
 import com.shelfeed.backend.global.common.exception.BusinessException;
@@ -45,6 +46,7 @@ class LibraryServiceTest {
     @Mock BookRepository bookRepository;
     @Mock ReviewRepository reviewRepository;
     @Mock LibraryRepository libraryRepository;
+    @Mock FollowRepository followRepository;
 
     @InjectMocks LibraryService libraryService;
 
