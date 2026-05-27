@@ -2,12 +2,16 @@ name: Release Drafter
 
 # main 브랜치에 PR 머지될 때마다 자동으로 다음 릴리스 노트 초안 갱신
 # 별도 설정 파일: .github/release-drafter.yml
+#
+# ⚠️ pull_request 트리거 제거 사유:
+#   release-drafter는 설정 파일을 default branch(main)에서만 읽음.
+#   PR 브랜치에서 트리거되면 main에 config 없어 "Invalid config file" 에러 발생.
+#   따라서 main push에만 동작하도록 제한.
+#   (config가 main에 안정적으로 머지된 뒤 PR 트리거를 다시 추가해도 됨)
 
 on:
   push:
     branches: [ main ]
-  pull_request:
-    types: [opened, reopened, synchronize]
 
 permissions:
   contents: write
