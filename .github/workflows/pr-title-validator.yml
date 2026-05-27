@@ -62,7 +62,7 @@ jobs:
 
       - name: Add helpful comment on failure
         if: failure()
-        uses: marocchino/sticky-pull-request-comment@v2
+        uses: marocchino/sticky-pull-request-comment@v3
         with:
           header: pr-title-validator
           message: |
@@ -83,7 +83,7 @@ jobs:
 
       - name: Remove helpful comment on success
         if: success()
-        uses: marocchino/sticky-pull-request-comment@v2
+        uses: marocchino/sticky-pull-request-comment@v3
         with:
           header: pr-title-validator
           delete: true
