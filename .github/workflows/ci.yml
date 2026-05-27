@@ -64,6 +64,9 @@ jobs:
           cache-read-only: ${{ github.ref != 'refs/heads/main' }}
 
       - name: Validate gradle wrapper
+        # 외부 서비스(services.gradle.org) 의존 → Cloudflare 일시 장애로 timeout 발생 가능
+        # 실패해도 빌드/테스트는 계속 진행. 보안 검증은 best-effort.
+        continue-on-error: true
         uses: gradle/actions/wrapper-validation@v3
 
       - name: Build (no test)
