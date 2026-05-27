@@ -61,7 +61,7 @@ class CommentServiceTest {
         commenterMember = Member.createLocal(2L, "commenter@test.com", "pw", "댓글러", "bio");
 
         Book book = Book.create("9791234567890", "테스트 도서", "저자", "출판사",
-                null, null, null, null, null, null);
+                null, null, null, null, null, null, null);
 
         publicReview = Review.create(ownerMember, book, null, (byte) 4, "공개 감상", null,
                 false, null, ReviewVisibility.PUBLIC, ReviewStatus.PUBLISHED);

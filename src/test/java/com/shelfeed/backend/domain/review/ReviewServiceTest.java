@@ -69,7 +69,7 @@ class ReviewServiceTest {
         ownerMember = Member.createLocal(1L, "owner@test.com", "pw", "작성자", "bio");
         otherMember = Member.createLocal(2L, "other@test.com", "pw", "다른사람", "bio");
         book = Book.create("9791234567890", "테스트 도서", "저자", "출판사",
-                null, null, null, null, null, null);
+                null, null, null, null, null, null, null);
 
         publicReview = Review.create(ownerMember, book, null, (byte) 4, "좋은 책", null,
                 false, null, ReviewVisibility.PUBLIC, ReviewStatus.PUBLISHED);
@@ -439,7 +439,7 @@ class ReviewServiceTest {
         void 회원없음_예외() {
             given(memberLoader.getOrThrow(99L)).willThrow(new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
 
-            assertThatThrownBy(() -> reviewService.getUserReviews(99L, null, 10))
+            assertThatThrownBy(() -> reviewService.getUserReviews(99L, null, null, 10))
                     .isInstanceOf(BusinessException.class)
                     .extracting("errorCode")
                     .isEqualTo(ErrorCode.MEMBER_NOT_FOUND);
@@ -452,7 +452,7 @@ class ReviewServiceTest {
             given(reviewRepository.findUserReviews(eq(ownerMember), any(), any()))
                     .willReturn(List.of());
 
-            var result = reviewService.getUserReviews(1L, null, 10);
+            var result = reviewService.getUserReviews(1L, null, null, 10);
 
             assertThat(result).isEmpty();
         }
