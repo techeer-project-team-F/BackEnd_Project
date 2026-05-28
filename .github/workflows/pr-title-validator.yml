@@ -10,6 +10,9 @@ on:
 
 permissions:
   pull-requests: write
+  # wip:true 옵션이 PR에 commit status(pending/success)를 생성하므로 statuses:write 필요.
+  # permissions 블록을 명시하면 미지정 스코프는 none이 되어 status API가 403을 반환함.
+  statuses: write
 
 jobs:
   validate:
